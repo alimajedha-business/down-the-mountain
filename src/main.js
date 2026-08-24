@@ -263,7 +263,7 @@ export class Game {
             }
 
             // Check if Bear is caught in TNT explosion
-            if (this.bear.state === 'CHASING' || this.bear.state === 'SLIDING') {
+            if (this.bear.state === 'ROAMING') {
               const bearPos = this.bear.bearMesh.root.position;
               const bearDist = Math.hypot(bearPos.x - cubePos.x, bearPos.z - cubePos.z);
               if ((this.bear.gridPos.r === tntR && this.bear.gridPos.c === tntC) || bearDist < 0.85) {

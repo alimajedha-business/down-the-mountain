@@ -38,6 +38,9 @@ export class BearChaser {
   reset() {
     this.state = 'INACTIVE';
     this.bearMesh.root.visible = false;
+    this.bearMesh.root.rotation.set(0, 0, 0);
+    this.bearMesh.bodyGroup.rotation.set(0, 0, 0);
+    this.bearMesh.bodyGroup.scale.set(1, 1, 1);
     this.isMoving = false;
     this.patrolLoop = [];
     this.currentWaypointIdx = 0;
@@ -88,16 +91,20 @@ export class BearChaser {
 
         const candidateLoop = [top, right, bottom, left];
 
-        if (candidateLoop.every(pt => this.grid.isCellValid(pt.r, pt.c))) {
-          // Sanitize candidate loop cubes to SAFE so bear has guaranteed safe territory
-          candidateLoop.forEach(pt => {
-            const cube = this.grid.getCube(pt.r, pt.c);
-            if (cube && (cube.type === CUBE_TYPES.TREE || cube.type === CUBE_TYPES.MAGMA || cube.type === CUBE_TYPES.TRAP || cube.type === CUBE_TYPES.CRACKED || cube.type === CUBE_TYPES.TNT || cube.type === CUBE_TYPES.RIVER)) {
-              this.grid.retypeCube(cube, CUBE_TYPES.SAFE);
-            }
-          });
-          return candidateLoop;
-        }
+        if (!candidateLoop.every(pt => this.grid.isCellValid(pt.r, pt.c))) continue;
+
+        // Ensure none of the candidate cubes are already collapsed
+        const cubes = candidateLoop.map(pt => this.grid.getCube(pt.r, pt.c));
+        if (cubes.some(cube => !cube || cube.collapsed)) continue;
+
+        // Sanitize candidate loop cubes to SAFE so bear has guaranteed safe territory
+        candidateLoop.forEach(pt => {
+          const cube = this.grid.getCube(pt.r, pt.c);
+          if (cube && (cube.type === CUBE_TYPES.TREE || cube.type === CUBE_TYPES.MAGMA || cube.type === CUBE_TYPES.TRAP || cube.type === CUBE_TYPES.CRACKED || cube.type === CUBE_TYPES.TNT || cube.type === CUBE_TYPES.RIVER)) {
+            this.grid.retypeCube(cube, CUBE_TYPES.SAFE);
+          }
+        });
+        return candidateLoop;
       }
     }
 
@@ -128,6 +135,17 @@ export class BearChaser {
 
     const startWorldPos = this.grid.getWorldPosition(loop[0].r, loop[0].c);
     this.bearMesh.root.position.set(startWorldPos.x, startWorldPos.y + 0.5, startWorldPos.z);
+
+    // Initial facing orientation toward the first waypoint in the loop
+    const firstDestPos = this.grid.getWorldPosition(loop[1].r, loop[1].c);
+    const dx = firstDestPos.x - startWorldPos.x;
+    const dz = firstDestPos.z - startWorldPos.z;
+    this.targetRotY = Math.atan2(dx, dz);
+
+    // Cleanly reset rotations and visibility
+    this.bearMesh.root.rotation.set(0, this.targetRotY, 0);
+    this.bearMesh.bodyGroup.rotation.set(0, 0, 0);
+    this.bearMesh.bodyGroup.scale.set(1, 1, 1);
     this.bearMesh.root.visible = true;
 
     // Roam around the circular loop for 12 to 16 hops (3 to 4 complete circuits)
@@ -240,6 +258,7 @@ export class BearChaser {
     const startTime = performance.now();
 
     const anim = () => {
+      if (this.state !== 'FALLING') return;
       const elapsed = (performance.now() - startTime) / 1000;
       if (elapsed < 0.85) {
         this.bearMesh.root.position.y = startPos.y - elapsed * elapsed * 24.0;
@@ -248,6 +267,8 @@ export class BearChaser {
         requestAnimationFrame(anim);
       } else {
         this.bearMesh.root.visible = false;
+        this.bearMesh.root.rotation.set(0, 0, 0);
+        this.bearMesh.bodyGroup.rotation.set(0, 0, 0);
         this.state = 'INACTIVE';
         this.spawnCooldown = 12.0 + Math.random() * 6.0; // Higher frequency (~12-18s)
       }
@@ -265,6 +286,8 @@ export class BearChaser {
     this.state = 'DEAD';
     this.particles.spawnBearShatter(this.bearMesh.root.position);
     this.bearMesh.root.visible = false;
+    this.bearMesh.root.rotation.set(0, 0, 0);
+    this.bearMesh.bodyGroup.rotation.set(0, 0, 0);
     this.state = 'INACTIVE';
     this.spawnCooldown = 12.0 + Math.random() * 6.0; // Higher frequency (~12-18s)
   }
@@ -273,6 +296,8 @@ export class BearChaser {
     this.particles.spawnBearPoof(this.bearMesh.root.position);
     this.audio.playBearPoof();
     this.bearMesh.root.visible = false;
+    this.bearMesh.root.rotation.set(0, 0, 0);
+    this.bearMesh.bodyGroup.rotation.set(0, 0, 0);
     this.state = 'INACTIVE';
     this.spawnCooldown = 12.0 + Math.random() * 6.0; // Higher frequency (~12-18s)
   }
@@ -285,12 +310,13 @@ export class BearChaser {
       return;
     }
 
-    // Smooth Facing Rotation
-    this.bearMesh.root.rotation.y = THREE.MathUtils.lerp(
-      this.bearMesh.root.rotation.y,
-      this.targetRotY,
-      0.35
-    );
+    // Smooth Facing Rotation with shortest-angle interpolation
+    let diff = this.targetRotY - this.bearMesh.root.rotation.y;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    this.bearMesh.root.rotation.y += diff * 0.35;
+    this.bearMesh.root.rotation.x = 0;
+    this.bearMesh.root.rotation.z = 0;
 
     // Continuous Player Catch Check during movement
     this.checkPlayerCatch();
@@ -315,7 +341,14 @@ export class BearChaser {
         );
 
         const linearY = THREE.MathUtils.lerp(this.hopStartPos.y, this.hopEndPos.y, this.hopProgress);
-        const arcY = Math.sin(this.hopProgress * Math.PI) * GAME_CONFIG.HOP_HEIGHT;
+
+        // Clear upper cube ledge when hopping uphill
+        const dy = this.hopEndPos.y - this.hopStartPos.y;
+        const hopHeight = dy > 0 
+          ? GAME_CONFIG.HOP_HEIGHT + dy * 0.75 
+          : GAME_CONFIG.HOP_HEIGHT;
+
+        const arcY = Math.sin(this.hopProgress * Math.PI) * hopHeight;
         this.bearMesh.root.position.y = linearY + arcY;
       }
     } else if (this.state === 'ROAMING') {
