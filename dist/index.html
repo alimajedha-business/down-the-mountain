@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Down the Mountain</title>
+  <meta name="description" content="Hop down the endless isometric mountain! Dodge spikes, cars, lava, and TNT, ride rivers, and collect stars!">
+  <!-- Google Fonts: Fredoka One for arcade score and UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="/assets/index-Rrst9R2h.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-Ds3MhA2S.css">
+</head>
+<body>
+  <div id="game-wrapper">
+    <div id="app-container">
+      <!-- 3D Canvas Container -->
+      <div id="canvas-container"></div>
+
+      <!-- Damage Flash FX Overlay -->
+      <div id="damage-flash" class="damage-flash-overlay"></div>
+
+      <!-- Touch Zones (Left / Right Screen Tap) -->
+      <div id="touch-controls">
+        <div id="touch-left" class="touch-zone" title="Tap Left or Press Left Arrow / A"></div>
+        <div id="touch-right" class="touch-zone" title="Tap Right or Press Right Arrow / D"></div>
+      </div>
+
+      <!-- In-Game Minimalist HUD Matching Original Screenshot -->
+      <header id="game-hud" class="hud-layer hidden">
+        <!-- Top-Left Pause Button (Two White Vertical Bars) -->
+        <button id="btn-pause" class="hud-pause-btn" aria-label="Pause Game">
+          <div class="pause-bar"></div>
+          <div class="pause-bar"></div>
+        </button>
+
+        <!-- Big Center White Arcade Score -->
+        <div class="score-display">
+          <span id="hud-score">0</span>
+        </div>
+
+        <!-- Shield Timer Widget -->
+        <div id="shield-hud" class="shield-indicator hidden">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <path fill="#00E5FF" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+          </svg>
+          <span id="shield-timer-text">4.0s</span>
+        </div>
+      </header>
+
+      <!-- Main Menu Overlay -->
+      <div id="menu-overlay" class="overlay-screen active">
+        <div class="menu-content">
+          <div class="logo-container">
+            <h1 class="game-title">DOWN<br><span class="title-sub">THE MOUNTAIN</span></h1>
+          </div>
+
+          <!-- Stats -->
+          <div class="menu-stats-row">
+            <div class="stat-pill">
+              <span class="stat-label">BEST SCORE</span>
+              <span id="menu-best-score" class="stat-val">0</span>
+            </div>
+            <div class="stat-pill">
+              <span class="stat-label">TOTAL STARS</span>
+              <span id="menu-total-stars" class="stat-val">⭐ 0</span>
+            </div>
+          </div>
+
+          <!-- Play Action -->
+          <div class="menu-actions">
+            <button id="btn-play" class="btn-main-action pulse-anim">
+              <span class="btn-text">TAP TO PLAY</span>
+              <span class="btn-subtext">Tap Left / Right or use Arrow Keys</span>
+            </button>
+
+            <div class="menu-sub-buttons">
+              <button id="btn-sound-toggle" class="btn-secondary" title="Toggle Sound">
+                <span id="sound-icon">🔊</span>
+                <span id="sound-text">SOUND ON</span>
+              </button>
+              <button id="btn-open-help" class="btn-secondary" title="Cube Guide">
+                <span>❓</span>
+                <span>RULES</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Help / Guide Modal -->
+      <div id="help-modal" class="modal-overlay hidden">
+        <div class="modal-card modal-large">
+          <div class="modal-header">
+            <h2>CUBE GUIDE</h2>
+            <button id="btn-close-help-modal" class="btn-close">&times;</button>
+          </div>
+          <div class="modal-body help-scroll">
+            <div class="guide-grid">
+              <div class="guide-card">
+                <div class="guide-icon safe-bg">🟩</div>
+                <div class="guide-text">
+                  <h3>Grass & Dirt Cubes</h3>
+                  <p>Safe to land on. Keep moving downwards!</p>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-icon tnt-bg">🧨</div>
+                <div class="guide-text">
+                  <h3>TNT Cube</h3>
+                  <p>3s fuse! Explodes chained adjacent TNT in 1s.</p>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-icon spike-bg">⚙️</div>
+                <div class="guide-text">
+                  <h3>Spike Trap</h3>
+                  <p>Cycles 1s hidden (safe) / 1s visible (fatal!).</p>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-icon star-bg">⭐</div>
+                <div class="guide-text">
+                  <h3>Star Cube</h3>
+                  <p>Collect +5 score and star coins!</p>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-icon river-bg">🌊</div>
+                <div class="guide-text">
+                  <h3>Waterfall Cube</h3>
+                  <p>Slides you rapidly down to the end of stream!</p>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-icon cracked-bg">💥</div>
+                <div class="guide-text">
+                  <h3>Cracked Cube</h3>
+                  <p>Breaks after 1 second! Hop away quickly.</p>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-icon magma-bg">🌋</div>
+                <div class="guide-text">
+                  <h3>Magma Cube</h3>
+                  <p>Volcanic lava. Burns instantly unless shielded!</p>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-icon shield-bg">🛡️</div>
+                <div class="guide-text">
+                  <h3>Shield Power-Up</h3>
+                  <p>Grants 4s total invulnerability!</p>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-icon bear-bg">🐻</div>
+                <div class="guide-text">
+                  <h3>Cubic Bear</h3>
+                  <p>Chases you for 6–10 cubes! Outrun it or use hazards to defeat it.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pause Modal -->
+      <div id="pause-modal" class="modal-overlay hidden">
+        <div class="modal-card modal-small">
+          <div class="modal-header">
+            <h2>GAME PAUSED</h2>
+          </div>
+          <div class="modal-body">
+            <div class="modal-actions-col">
+              <button id="btn-resume" class="btn-main-action">
+                <span class="btn-text">▶ RESUME</span>
+              </button>
+              <button id="btn-restart-paused" class="btn-secondary">RESTART</button>
+              <button id="btn-quit-menu" class="btn-secondary">MAIN MENU</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Over Modal -->
+      <div id="gameover-modal" class="modal-overlay hidden">
+        <div class="modal-card gameover-card">
+          <div id="new-best-banner" class="new-best-badge hidden">🏆 NEW BEST! 🏆</div>
+          <h2 id="death-reason-title" class="gameover-title">GAME OVER</h2>
+          <p id="death-reason-sub" class="death-subtext">You were caught in the avalanche!</p>
+
+          <div class="gameover-stats">
+            <div class="go-stat-box highlight">
+              <span class="go-stat-label">SCORE</span>
+              <span id="go-score" class="go-stat-value">0</span>
+            </div>
+            <div class="go-stat-box">
+              <span class="go-stat-label">BEST</span>
+              <span id="go-best" class="go-stat-value">0</span>
+            </div>
+            <div class="go-stat-box">
+              <span class="go-stat-label">STARS</span>
+              <span id="go-stars" class="go-stat-value">⭐ +0</span>
+            </div>
+          </div>
+
+          <div class="modal-actions-col">
+            <button id="btn-play-again" class="btn-main-action pulse-anim">
+              <span class="btn-text">🔄 PLAY AGAIN</span>
+              <span class="btn-subtext">Tap or Press Space to Restart</span>
+            </button>
+            <button id="btn-go-menu" class="btn-secondary">MAIN MENU</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
