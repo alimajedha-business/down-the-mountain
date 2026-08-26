@@ -96,8 +96,8 @@
                 <span id="sound-text">SOUND ON</span>
               </button>
               <button id="btn-open-help" class="btn-secondary" title="Cube Guide">
-                <span>❓</span>
-                <span>RULES</span>
+                <span>📖</span>
+                <span>CUBE GUIDE</span>
               </button>
             </div>
           </div>
@@ -106,83 +106,182 @@
 
       <!-- Help / Guide Modal -->
       <div id="help-modal" class="modal-overlay hidden">
-        <div class="modal-card modal-large">
+        <div class="modal-card modal-large guide-modal-card">
           <div class="modal-header">
-            <h2>CUBE GUIDE</h2>
-            <button id="btn-close-help-modal" class="btn-close">&times;</button>
+            <div class="guide-header-title">
+              <h2>MOUNTAIN SURVIVAL GUIDE</h2>
+              <span class="guide-subtitle">Every Cube & Hazard Explained</span>
+            </div>
+            <button id="btn-close-help-modal" class="btn-close" aria-label="Close Guide">&times;</button>
           </div>
+
+          <!-- Guide Filter Tabs -->
+          <div class="guide-tabs">
+            <button class="guide-tab-btn active" data-tab="all">ALL (12)</button>
+            <button class="guide-tab-btn" data-tab="terrain">TERRAIN & POWER</button>
+            <button class="guide-tab-btn" data-tab="hazards">HAZARDS</button>
+            <button class="guide-tab-btn" data-tab="threats">THREATS</button>
+          </div>
+
           <div class="modal-body help-scroll">
-            <div class="guide-grid">
-              <div class="guide-card">
-                <div class="guide-icon safe-bg">🟩</div>
-                <div class="guide-text">
-                  <h3>Grass Cube</h3>
-                  <p>Safe to land on. Keep moving downwards!</p>
+            <div class="guide-grid" id="guide-cards-grid">
+              
+              <!-- 1. Grass Cube -->
+              <div class="guide-card" data-category="terrain">
+                <div class="guide-card-top">
+                  <div class="guide-icon-box safe-bg">🟩</div>
+                  <div class="guide-card-head">
+                    <h3>Grass Cube</h3>
+                    <span class="guide-badge badge-safe">SAFE</span>
+                  </div>
                 </div>
+                <p class="guide-desc">Solid mountain terrain with striped grass. Standard safe footing for your descent.</p>
+                <div class="guide-tip">💡 <strong>Tip:</strong> Use as rest points to plan your next 2–3 moves.</div>
               </div>
-              <div class="guide-card">
-                <div class="guide-icon" style="color: #6d4c2a;">🟤</div>
-                <div class="guide-text">
-                  <h3>Clay / Mud Cube</h3>
-                  <p>Sticky mud clings to feet, slowing your next 3 jumps!</p>
+
+              <!-- 2. Clay / Mud Cube -->
+              <div class="guide-card" data-category="terrain">
+                <div class="guide-card-top">
+                  <div class="guide-icon-box mud-bg">🟤</div>
+                  <div class="guide-card-head">
+                    <h3>Clay / Mud</h3>
+                    <span class="guide-badge badge-slow">SLOWDOWN</span>
+                  </div>
                 </div>
+                <p class="guide-desc">Wet sticky clay clings to your shoes. Slows down your <strong>next 3 hops</strong> by <strong>2.5× duration</strong>.</p>
+                <div class="guide-tip">⚠️ <strong>Caution:</strong> Avoid jumping on mud when chased by avalanche or bear!</div>
               </div>
-              <div class="guide-card">
-                <div class="guide-icon tnt-bg">🧨</div>
-                <div class="guide-text">
-                  <h3>TNT Cube</h3>
-                  <p>3s fuse! Explodes chained adjacent TNT in 1s.</p>
+
+              <!-- 3. Tree Cube -->
+              <div class="guide-card" data-category="terrain">
+                <div class="guide-card-top">
+                  <div class="guide-icon-box tree-bg">🌲</div>
+                  <div class="guide-card-head">
+                    <h3>Tree Cube</h3>
+                    <span class="guide-badge badge-obstacle">OBSTACLE</span>
+                  </div>
                 </div>
+                <p class="guide-desc">Dense cubic pine tree. Impassable barrier—hopping into a tree <strong>bounces you back</strong> in place.</p>
+                <div class="guide-tip">💡 <strong>Tip:</strong> Cannot be stepped on. Reroute diagonally around trees.</div>
               </div>
-              <div class="guide-card">
-                <div class="guide-icon spike-bg">⚙️</div>
-                <div class="guide-text">
-                  <h3>Spike Trap</h3>
-                  <p>Cycles 2s hidden (safe) / 1s visible (fatal!).</p>
+
+              <!-- 4. Waterfall / River Cube -->
+              <div class="guide-card" data-category="terrain">
+                <div class="guide-card-top">
+                  <div class="guide-icon-box river-bg">🌊</div>
+                  <div class="guide-card-head">
+                    <h3>Waterfall River</h3>
+                    <span class="guide-badge badge-slide">RAPID SLIDE</span>
+                  </div>
                 </div>
+                <p class="guide-desc">Continuous crystal water rapids. Automatically sweeps you rapidly downhill (2–4 cubes) along the stream.</p>
+                <div class="guide-tip">⚡ <strong>Speed:</strong> Super fast way to gain score and outpace the avalanche.</div>
               </div>
-              <div class="guide-card">
-                <div class="guide-icon star-bg">⭐</div>
-                <div class="guide-text">
-                  <h3>Star Cube</h3>
-                  <p>Collect +5 score and star coins!</p>
+
+              <!-- 5. Star Cube -->
+              <div class="guide-card" data-category="terrain">
+                <div class="guide-card-top">
+                  <div class="guide-icon-box star-bg">⭐</div>
+                  <div class="guide-card-head">
+                    <h3>Star Cube</h3>
+                    <span class="guide-badge badge-collect">+5 SCORE & COIN</span>
+                  </div>
                 </div>
+                <p class="guide-desc">Contains a rotating golden star. Collect to gain <strong>+5 bonus score</strong> and <strong>+1 star coin</strong>.</p>
+                <div class="guide-tip">🪙 <strong>Bonus:</strong> Saved permanently to your star collection!</div>
               </div>
-              <div class="guide-card">
-                <div class="guide-icon river-bg">🌊</div>
-                <div class="guide-text">
-                  <h3>Waterfall Cube</h3>
-                  <p>Slides you rapidly down to the end of stream!</p>
+
+              <!-- 6. Shield Power-Up -->
+              <div class="guide-card" data-category="terrain">
+                <div class="guide-card-top">
+                  <div class="guide-icon-box shield-bg">🛡️</div>
+                  <div class="guide-card-head">
+                    <h3>Shield Power-Up</h3>
+                    <span class="guide-badge badge-powerup">4.0s INVULNERABLE</span>
+                  </div>
                 </div>
+                <p class="guide-desc">Grants a glowing forcefield for <strong>4.0 seconds</strong>. Protects against magma, spikes, TNT, and destroys the bear!</p>
+                <div class="guide-tip">👑 <strong>Pro Tip:</strong> Sprint straight through magma and traps while active!</div>
               </div>
-              <div class="guide-card">
-                <div class="guide-icon cracked-bg">💥</div>
-                <div class="guide-text">
-                  <h3>Cracked Cube</h3>
-                  <p>Breaks after 1 second! Hop away quickly.</p>
+
+              <!-- 7. Magma / Lava Cube -->
+              <div class="guide-card" data-category="hazards">
+                <div class="guide-card-top">
+                  <div class="guide-icon-box magma-bg">🌋</div>
+                  <div class="guide-card-head">
+                    <h3>Magma / Lava</h3>
+                    <span class="guide-badge badge-fatal">INSTANT FATAL</span>
+                  </div>
                 </div>
+                <p class="guide-desc">Volcanic obsidian bedrock with glowing molten lava fissures. Instantly burns player on contact unless shielded.</p>
+                <div class="guide-tip">🛡️ <strong>Shield Only:</strong> Only crossable when your cyan shield is active.</div>
               </div>
-              <div class="guide-card">
-                <div class="guide-icon magma-bg">🌋</div>
-                <div class="guide-text">
-                  <h3>Magma Cube</h3>
-                  <p>Volcanic lava. Burns instantly unless shielded!</p>
+
+              <!-- 8. Cracked Earth Fault Cube -->
+              <div class="guide-card" data-category="hazards">
+                <div class="guide-card-top">
+                  <div class="guide-icon-box cracked-bg">💥</div>
+                  <div class="guide-card-head">
+                    <h3>Cracked Earth</h3>
+                    <span class="guide-badge badge-collapse">2.0s COLLAPSE</span>
+                  </div>
                 </div>
+                <p class="guide-desc">Unstable fractured stone. Triggers a <strong>2.0-second seismic tremor</strong> then collapses into the abyss.</p>
+                <div class="guide-tip">⏳ <strong>Urgent:</strong> You can safely land here—just hop off within 2 seconds!</div>
               </div>
-              <div class="guide-card">
-                <div class="guide-icon shield-bg">🛡️</div>
-                <div class="guide-text">
-                  <h3>Shield Power-Up</h3>
-                  <p>Grants 4s total invulnerability!</p>
+
+              <!-- 9. Spike Trap Cube -->
+              <div class="guide-card" data-category="hazards">
+                <div class="guide-card-top">
+                  <div class="guide-icon-box spike-bg">⚙️</div>
+                  <div class="guide-card-head">
+                    <h3>Spike Trap</h3>
+                    <span class="guide-badge badge-cyclic">3.0s CYCLE</span>
+                  </div>
                 </div>
+                <p class="guide-desc">Metal stone grate with motorized spikes. Cycles <strong>2.0s Hidden (Safe)</strong> ↔ <strong>1.0s Raised (Fatal!)</strong>.</p>
+                <div class="guide-tip">⏱️ <strong>Timing:</strong> Cross right as the spikes retract for a full 2s safe window.</div>
               </div>
-              <div class="guide-card">
-                <div class="guide-icon bear-bg">🐻</div>
-                <div class="guide-text">
-                  <h3>Cubic Bear</h3>
-                  <p>Chases you for 6–10 cubes! Outrun it or use hazards to defeat it.</p>
+
+              <!-- 10. TNT Explosive Cube -->
+              <div class="guide-card" data-category="hazards">
+                <div class="guide-card-top">
+                  <div class="guide-icon-box tnt-bg">🧨</div>
+                  <div class="guide-card-head">
+                    <h3>TNT Crate</h3>
+                    <span class="guide-badge badge-explosive">CHAIN EXPLOSION</span>
+                  </div>
                 </div>
+                <p class="guide-desc">Stepping on TNT lights a <strong>2.0s fuse</strong>. Detonation triggers all adjacent TNT with a fast <strong>1.0s domino fuse</strong>!</p>
+                <div class="guide-tip">🏃 <strong>Evacuate:</strong> Jump off immediately to clear the blast radius.</div>
               </div>
+
+              <!-- 11. Roaming Cubic Bear -->
+              <div class="guide-card" data-category="threats">
+                <div class="guide-card-top">
+                  <div class="guide-icon-box bear-bg">🐻</div>
+                  <div class="guide-card-head">
+                    <h3>Roaming Bear</h3>
+                    <span class="guide-badge badge-threat">APEX PREDATOR</span>
+                  </div>
+                </div>
+                <p class="guide-desc">Patrols a 4-cube circular diamond loop ahead of you. Fatal on contact, but <strong>Shield defeats it</strong>!</p>
+                <div class="guide-tip">🥊 <strong>Counter:</strong> Outwait its patrol loop or ram it with Shield active.</div>
+              </div>
+
+              <!-- 12. Mountain Avalanche -->
+              <div class="guide-card" data-category="threats">
+                <div class="guide-card-top">
+                  <div class="guide-icon-box avalanche-bg">🏔️</div>
+                  <div class="guide-card-head">
+                    <h3>Avalanche</h3>
+                    <span class="guide-badge badge-world">CHASE COLLAPSE</span>
+                  </div>
+                </div>
+                <p class="guide-desc">Starts 3s into the run. Mountain collapses top-down <strong>1 row every 0.4 seconds</strong> chasing you downwards.</p>
+                <div class="guide-tip">🚀 <strong>Rule:</strong> Keep moving! Never idle on a single cube for over 2 seconds.</div>
+              </div>
+
             </div>
           </div>
         </div>
@@ -197,6 +296,10 @@
           <div class="modal-body">
             <div class="modal-actions-col">
               <button id="btn-resume" class="btn-main-action">RESUME</button>
+              <button id="btn-pause-help" class="btn-secondary">
+                <span>📖</span>
+                <span>CUBE GUIDE</span>
+              </button>
               <button id="btn-restart-paused" class="btn-secondary">RESTART</button>
               <button id="btn-quit-menu" class="btn-secondary">MAIN MENU</button>
             </div>
@@ -228,6 +331,10 @@
 
           <div class="modal-actions-col">
             <button id="btn-play-again" class="btn-main-action pulse-anim">PLAY AGAIN</button>
+            <button id="btn-go-help" class="btn-secondary">
+              <span>📖</span>
+              <span>CUBE GUIDE</span>
+            </button>
             <button id="btn-go-menu" class="btn-secondary">MAIN MENU</button>
           </div>
         </div>

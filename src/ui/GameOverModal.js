@@ -30,6 +30,11 @@ export class GameOverModal {
       this.hide();
       this.onReturnMenu();
     });
+
+    document.getElementById('btn-go-help')?.addEventListener('click', () => {
+      this.audio.playClick();
+      document.getElementById('help-modal')?.classList.remove('hidden');
+    });
   }
 
   show(score, starsCollected, deathReason) {

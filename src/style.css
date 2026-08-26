@@ -401,7 +401,7 @@ body {
   width: 100%;
   background: linear-gradient(180deg, #FFDD33 0%, #FFB300 100%);
   border: none;
-  box-shadow: 0 6px 0 #B37D00, 0 10px 20px rgba(255, 179, 0, 0.4);
+  box-shadow: none;
   color: #1E1200;
   padding: 14px 18px;
   border-radius: 16px;
@@ -411,15 +411,18 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: transform 0.1s;
+  transition: transform 0.1s, opacity 0.15s;
 }
 
 .btn-main-action:hover {
   transform: translateY(-2px);
+  opacity: 0.95;
+  box-shadow: none;
 }
 
 .btn-main-action:active {
-  transform: translateY(4px);
+  transform: translateY(2px);
+  box-shadow: none;
 }
 
 .btn-text {
@@ -478,42 +481,216 @@ body {
   background: rgba(255, 255, 255, 0.18);
 }
 
-/* Cube Guide */
+/* ==========================================================================
+   CUBE GUIDE & SURVIVAL MANUAL
+   ========================================================================== */
+
+#help-modal {
+  z-index: 100 !important;
+}
+
+.guide-modal-card {
+  max-width: 520px;
+  width: 95%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(18, 12, 32, 0.95);
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(100, 221, 23, 0.15);
+  padding: 18px 20px;
+  border-radius: 24px;
+}
+
+.guide-header-title h2 {
+  font-size: 20px;
+  font-weight: 900;
+  color: #FFFFFF;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+}
+
+.guide-subtitle {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.guide-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  margin-top: 4px;
+  margin-bottom: 6px;
+  overflow-x: auto;
+}
+
+.guide-tab-btn {
+  flex: 1;
+  min-width: 70px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--font-arcade);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.guide-tab-btn:hover {
+  color: #FFFFFF;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.guide-tab-btn.active {
+  background: var(--color-primary);
+  color: #1E1200;
+  box-shadow: 0 2px 8px rgba(255, 204, 0, 0.4);
+}
+
 .help-scroll {
-  max-height: 60vh;
+  max-height: 55vh;
   overflow-y: auto;
+  padding-right: 4px;
+  margin-top: 4px;
 }
 
 .guide-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .guide-grid {
+    grid-template-columns: 1fr;
+  }
+  .guide-modal-card {
+    padding: 14px 14px;
+  }
 }
 
 .guide-card {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  padding: 8px 10px;
+  border-radius: 14px;
+  padding: 10px 12px;
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.guide-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.guide-card.hidden-card {
+  display: none !important;
+}
+
+.guide-card-top {
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.guide-icon {
-  font-size: 20px;
+.guide-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
-.guide-text h3 {
-  font-size: 12px;
+.safe-bg { background: rgba(101, 214, 0, 0.25); border: 1px solid #65d600; }
+.mud-bg { background: rgba(109, 76, 42, 0.4); border: 1px solid #8d6e3f; }
+.tree-bg { background: rgba(46, 125, 50, 0.3); border: 1px solid #4caf50; }
+.river-bg { background: rgba(0, 212, 255, 0.25); border: 1px solid #00d4ff; }
+.star-bg { background: rgba(255, 215, 0, 0.25); border: 1px solid #ffd700; }
+.shield-bg { background: rgba(0, 229, 255, 0.25); border: 1px solid #00e5ff; }
+.magma-bg { background: rgba(255, 23, 68, 0.25); border: 1px solid #ff1744; }
+.cracked-bg { background: rgba(230, 81, 0, 0.25); border: 1px solid #ff9800; }
+.spike-bg { background: rgba(158, 158, 158, 0.25); border: 1px solid #bdbdbd; }
+.tnt-bg { background: rgba(255, 61, 0, 0.3); border: 1px solid #ff3d00; }
+.bear-bg { background: rgba(121, 85, 72, 0.35); border: 1px solid #a1887f; }
+.avalanche-bg { background: rgba(144, 202, 249, 0.25); border: 1px solid #90caf9; }
+
+.guide-card-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.guide-card-head h3 {
+  font-size: 13px;
   font-weight: 800;
-  margin-bottom: 2px;
+  color: #FFFFFF;
+  line-height: 1.1;
 }
 
-.guide-text p {
-  font-size: 10px;
+.guide-badge {
+  display: inline-block;
+  font-size: 8px;
+  font-weight: 900;
+  padding: 1px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  width: fit-content;
+}
+
+.badge-safe { background: rgba(76, 175, 80, 0.2); color: #81c784; border: 1px solid rgba(76, 175, 80, 0.4); }
+.badge-slow { background: rgba(141, 110, 63, 0.25); color: #d7ccc8; border: 1px solid rgba(141, 110, 63, 0.5); }
+.badge-obstacle { background: rgba(46, 125, 50, 0.25); color: #a5d6a7; border: 1px solid rgba(46, 125, 50, 0.5); }
+.badge-slide { background: rgba(0, 212, 255, 0.2); color: #80d8ff; border: 1px solid rgba(0, 212, 255, 0.4); }
+.badge-collect { background: rgba(255, 215, 0, 0.2); color: #ffe082; border: 1px solid rgba(255, 215, 0, 0.4); }
+.badge-powerup { background: rgba(0, 229, 255, 0.2); color: #00e5ff; border: 1px solid rgba(0, 229, 255, 0.5); }
+.badge-fatal { background: rgba(255, 23, 68, 0.25); color: #ff8a80; border: 1px solid rgba(255, 23, 68, 0.5); }
+.badge-collapse { background: rgba(255, 152, 0, 0.25); color: #ffcc80; border: 1px solid rgba(255, 152, 0, 0.5); }
+.badge-cyclic { background: rgba(189, 189, 189, 0.2); color: #e0e0e0; border: 1px solid rgba(189, 189, 189, 0.4); }
+.badge-explosive { background: rgba(255, 61, 0, 0.25); color: #ffab91; border: 1px solid rgba(255, 61, 0, 0.5); }
+.badge-threat { background: rgba(186, 104, 200, 0.25); color: #e1bee7; border: 1px solid rgba(186, 104, 200, 0.5); }
+.badge-world { background: rgba(100, 181, 246, 0.25); color: #bbdefb; border: 1px solid rgba(100, 181, 246, 0.5); }
+
+.guide-desc {
+  font-size: 10.5px;
   color: var(--text-dim);
-  line-height: 1.3;
+  line-height: 1.35;
+}
+
+.guide-desc strong {
+  color: #FFFFFF;
+}
+
+.guide-tip {
+  font-size: 9.5px;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  padding: 4px 6px;
+  line-height: 1.25;
+}
+
+.guide-tip strong {
+  color: var(--color-primary);
 }
 
 /* Game Over */

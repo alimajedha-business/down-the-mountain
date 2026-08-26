@@ -15,6 +15,7 @@ export class Menu {
     this.pauseModal = document.getElementById('pause-modal');
 
     this.initEventListeners();
+    this.initGuideTabs();
     this.updateMenuStats();
   }
 
@@ -42,10 +43,20 @@ export class Menu {
       });
     }
 
-    // How to Play / Guide Button
+    // How to Play / Guide Button from Main Menu
     const btnHelp = document.getElementById('btn-open-help');
     if (btnHelp) {
       btnHelp.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.audio.playClick();
+        this.openHelpModal();
+      });
+    }
+
+    // Guide Button from Pause Modal
+    const btnPauseHelp = document.getElementById('btn-pause-help');
+    if (btnPauseHelp) {
+      btnPauseHelp.addEventListener('click', (e) => {
         e.stopPropagation();
         this.audio.playClick();
         this.openHelpModal();
@@ -80,6 +91,30 @@ export class Menu {
       this.closePauseModal();
       this.showMenu();
       this.onQuitToMenu();
+    });
+  }
+
+  initGuideTabs() {
+    const tabBtns = document.querySelectorAll('.guide-tab-btn');
+    const cards = document.querySelectorAll('.guide-card');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.audio.playClick();
+
+        tabBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const tabCategory = btn.dataset.tab;
+        cards.forEach(card => {
+          if (tabCategory === 'all' || card.dataset.category === tabCategory) {
+            card.classList.remove('hidden-card');
+          } else {
+            card.classList.add('hidden-card');
+          }
+        });
+      });
     });
   }
 
