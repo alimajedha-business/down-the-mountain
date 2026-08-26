@@ -252,8 +252,10 @@ export class SceneManager {
         cloud.position.x += cloud.userData.speed * delta;
         if (cloud.position.y > this.cameraTarget.y + 12) {
           cloud.position.y -= 50;
+          cloud.position.x = cloud.userData.baseX;
         } else if (cloud.position.y < this.cameraTarget.y - 38) {
           cloud.position.y += 50;
+          cloud.position.x = cloud.userData.baseX;
         }
       });
     }

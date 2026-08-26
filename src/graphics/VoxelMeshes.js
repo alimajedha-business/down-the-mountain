@@ -65,25 +65,69 @@ export class VoxelMeshes {
     const tntFlashTex = new THREE.CanvasTexture(tntFlashCanvas);
     tntFlashTex.magFilter = THREE.NearestFilter;
 
-    // 3. Arrow / Direction Tile Texture
-    const arrowCanvas = document.createElement('canvas');
-    arrowCanvas.width = 128;
-    arrowCanvas.height = 128;
-    const aCtx = arrowCanvas.getContext('2d');
-    aCtx.fillStyle = '#ffcc00';
-    aCtx.fillRect(0, 0, 128, 128);
-    aCtx.strokeStyle = '#111111';
-    aCtx.lineWidth = 10;
-    aCtx.lineCap = 'round';
-    aCtx.beginPath();
-    aCtx.arc(64, 64, 8, 0, Math.PI * 2);
-    aCtx.fillStyle = '#111111';
-    aCtx.fill();
-    aCtx.moveTo(64, 64); aCtx.lineTo(24, 24);
-    aCtx.moveTo(64, 64); aCtx.lineTo(104, 24);
-    aCtx.moveTo(64, 64); aCtx.lineTo(64, 104);
-    aCtx.stroke();
-    const arrowTex = new THREE.CanvasTexture(arrowCanvas);
+    // 2c. Clay / Mud Top Texture (wet sticky mud appearance)
+    const mudCanvas = document.createElement('canvas');
+    mudCanvas.width = 128;
+    mudCanvas.height = 128;
+    const mudCtx = mudCanvas.getContext('2d');
+    // Warm brown clay base
+    mudCtx.fillStyle = '#6d4c2a';
+    mudCtx.fillRect(0, 0, 128, 128);
+    // Darker wet mud patches
+    mudCtx.fillStyle = '#4a3218';
+    for (let i = 0; i < 18; i++) {
+      const rx = (i * 31 + 5) % 128;
+      const ry = (i * 43 + 9) % 128;
+      mudCtx.beginPath();
+      mudCtx.ellipse(rx, ry, 8 + (i % 5), 6 + (i % 4), 0, 0, Math.PI * 2);
+      mudCtx.fill();
+    }
+    // Glossy wet highlight spots
+    mudCtx.fillStyle = 'rgba(180, 140, 90, 0.5)';
+    for (let i = 0; i < 10; i++) {
+      const rx = (i * 37 + 20) % 128;
+      const ry = (i * 53 + 15) % 128;
+      mudCtx.beginPath();
+      mudCtx.ellipse(rx, ry, 5, 3, (i * 0.5), 0, Math.PI * 2);
+      mudCtx.fill();
+    }
+    // Subtle crack lines in the clay
+    mudCtx.strokeStyle = '#3a2410';
+    mudCtx.lineWidth = 2;
+    mudCtx.beginPath();
+    mudCtx.moveTo(20, 30); mudCtx.lineTo(50, 45); mudCtx.lineTo(90, 35);
+    mudCtx.moveTo(40, 80); mudCtx.lineTo(75, 95); mudCtx.lineTo(110, 85);
+    mudCtx.stroke();
+    const mudTopTex = new THREE.CanvasTexture(mudCanvas);
+    mudTopTex.magFilter = THREE.NearestFilter;
+
+    // 2d. Clay / Mud Side Texture
+    const mudSideCanvas = document.createElement('canvas');
+    mudSideCanvas.width = 128;
+    mudSideCanvas.height = 128;
+    const msCtx = mudSideCanvas.getContext('2d');
+    msCtx.fillStyle = '#5a3d1e';
+    msCtx.fillRect(0, 0, 128, 128);
+    // Dripping mud streaks
+    msCtx.strokeStyle = '#3a2410';
+    msCtx.lineWidth = 6;
+    msCtx.lineCap = 'round';
+    msCtx.beginPath();
+    msCtx.moveTo(30, 0); msCtx.lineTo(35, 50); msCtx.lineTo(28, 128);
+    msCtx.moveTo(75, 0); msCtx.lineTo(80, 60); msCtx.lineTo(70, 128);
+    msCtx.moveTo(110, 0); msCtx.lineTo(105, 45); msCtx.lineTo(112, 128);
+    msCtx.stroke();
+    // Wet sheen highlights
+    msCtx.strokeStyle = 'rgba(180, 140, 90, 0.35)';
+    msCtx.lineWidth = 3;
+    msCtx.beginPath();
+    msCtx.moveTo(32, 10); msCtx.lineTo(36, 40);
+    msCtx.moveTo(77, 15); msCtx.lineTo(81, 50);
+    msCtx.stroke();
+    const mudSideTex = new THREE.CanvasTexture(mudSideCanvas);
+    mudSideTex.magFilter = THREE.NearestFilter;
+
+
 
     // 4. Trap Hole Frame Texture
     const trapHoleCanvas = document.createElement('canvas');
@@ -261,7 +305,8 @@ export class VoxelMeshes {
       grassTex,
       tntTex,
       tntFlashTex,
-      arrowTex,
+      mudTopTex,
+      mudSideTex,
       trapHoleTex,
       waterTex,
       crackTex,
@@ -278,6 +323,28 @@ export class VoxelMeshes {
       dirtRight: new THREE.MeshLambertMaterial({ color: 0x7a4820, flatShading: true }),
       dirtTop: new THREE.MeshLambertMaterial({ color: 0xc68b59, flatShading: true }),
 
+      // Clay/Mud cube materials (wet sticky appearance)
+      mudTop: new THREE.MeshStandardMaterial({
+        map: this.textures.mudTopTex,
+        roughness: 0.3,
+        metalness: 0.15,
+        flatShading: true
+      }),
+      mudSideLeft: new THREE.MeshStandardMaterial({
+        map: this.textures.mudSideTex,
+        color: 0x6d4c2a,
+        roughness: 0.35,
+        metalness: 0.1,
+        flatShading: true
+      }),
+      mudSideRight: new THREE.MeshStandardMaterial({
+        map: this.textures.mudSideTex,
+        color: 0x5a3d1e,
+        roughness: 0.35,
+        metalness: 0.1,
+        flatShading: true
+      }),
+
       tntSide: new THREE.MeshLambertMaterial({ map: this.textures.tntTex, flatShading: true }),
       tntTop: new THREE.MeshLambertMaterial({ color: 0xff3b00, flatShading: true }),
       tntFlashingSide: new THREE.MeshLambertMaterial({ map: this.textures.tntFlashTex, emissive: 0xffeb3b, emissiveIntensity: 0.8, flatShading: true }),
@@ -291,7 +358,7 @@ export class VoxelMeshes {
         flatShading: true
       }),
 
-      arrowTop: new THREE.MeshLambertMaterial({ map: this.textures.arrowTex, flatShading: true }),
+
       crackTop: new THREE.MeshLambertMaterial({ map: this.textures.crackTex, flatShading: true }),
       crackSide: new THREE.MeshLambertMaterial({ map: this.textures.crackSideTex, flatShading: true }),
 
@@ -397,9 +464,6 @@ export class VoxelMeshes {
       case CUBE_TYPES.TRAP:
         this.buildTrapCube(group);
         break;
-      case CUBE_TYPES.ARROW:
-        this.buildArrowCube(group);
-        break;
       case CUBE_TYPES.TNT:
         this.buildTNTCube(group);
         break;
@@ -433,15 +497,15 @@ export class VoxelMeshes {
     group.add(this.createBaseMesh(materials));
   }
 
-  // 2. Pure Dirt Cube
+  // 2. Clay / Mud Cube (sticky wet clay appearance)
   buildDirtCube(group) {
     const materials = [
-      this.materials.dirtRight,
-      this.materials.dirtRight,
-      this.materials.dirtTop,
-      this.materials.dirtRight,
-      this.materials.dirtLeft,
-      this.materials.dirtLeft
+      this.materials.mudSideRight,  // +X
+      this.materials.mudSideRight,  // -X
+      this.materials.mudTop,        // +Y (top face with wet clay texture)
+      this.materials.mudSideRight,  // -Y
+      this.materials.mudSideLeft,   // +Z
+      this.materials.mudSideLeft    // -Z
     ];
     group.add(this.createBaseMesh(materials));
   }
@@ -519,18 +583,6 @@ export class VoxelMeshes {
     group.userData.spikesActive = false;
   }
 
-  // 6. Arrow / Direction Cube
-  buildArrowCube(group) {
-    const materials = [
-      this.materials.dirtRight,
-      this.materials.dirtRight,
-      this.materials.arrowTop,
-      this.materials.dirtRight,
-      this.materials.dirtLeft,
-      this.materials.dirtLeft
-    ];
-    group.add(this.createBaseMesh(materials));
-  }
 
   // 7. Cracked Earth Fault Cube
   buildCrackedCube(group) {

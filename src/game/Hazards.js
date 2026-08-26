@@ -10,11 +10,25 @@ export class Hazards {
 
     this.activeTNTs = new Set();
     this.activeCracked = new Set();
+    this.trapCubes = new Set(); // Performance: tracked set for spike traps
   }
 
   reset() {
     this.activeTNTs.clear();
     this.activeCracked.clear();
+    this.trapCubes.clear();
+  }
+
+  // Register a trap cube for efficient spike updates
+  registerTrap(cubeData) {
+    if (cubeData && cubeData.type === CUBE_TYPES.TRAP) {
+      this.trapCubes.add(cubeData);
+    }
+  }
+
+  // Unregister trap cubes (called when rows are cleaned up)
+  unregisterTrap(cubeData) {
+    this.trapCubes.delete(cubeData);
   }
 
   // Trigger TNT: first stepped-on TNT gets 2.0s fuse; adjacent domino TNTs get 1.0s fuse
@@ -55,21 +69,23 @@ export class Hazards {
   }
 
   // Spike Traps: 1.0s Hidden (safe) <-> 1.0s Visible (fatal)
+  // Performance: Only iterates registered trap cubes, not all grid cubes
   updateSpikes() {
     const timeSec = performance.now() / 1000;
     const cycleTime = timeSec % GAME_CONFIG.SPIKE_CYCLE_PERIOD;
     const isActive = cycleTime < GAME_CONFIG.SPIKE_ACTIVE_TIME;
 
-    for (const cubes of this.grid.rows.values()) {
-      for (const cube of cubes) {
-        if (cube.type === CUBE_TYPES.TRAP && !cube.collapsed && cube.mesh) {
-          cube.spikesActive = isActive;
-          const spikeMesh = cube.mesh.userData.spikeMesh;
-          if (spikeMesh) {
-            const targetY = isActive ? 0.75 : 0.15;
-            spikeMesh.position.y += (targetY - spikeMesh.position.y) * 0.35;
-          }
-        }
+    for (const cube of this.trapCubes) {
+      if (cube.collapsed || !cube.mesh) {
+        this.trapCubes.delete(cube);
+        continue;
+      }
+
+      cube.spikesActive = isActive;
+      const spikeMesh = cube.mesh.userData.spikeMesh;
+      if (spikeMesh) {
+        const targetY = isActive ? 0.75 : 0.15;
+        spikeMesh.position.y += (targetY - spikeMesh.position.y) * 0.35;
       }
     }
   }
@@ -156,18 +172,9 @@ export class Hazards {
         this.triggerTNT(neighbor, true);
       }
     }
-
-    // Also check world proximity for any diagonal neighbors within range
-    for (const cubes of this.grid.rows.values()) {
-      for (const neighbor of cubes) {
-        if (neighbor && neighbor !== cube && neighbor.type === CUBE_TYPES.TNT && !neighbor.collapsed) {
-          const dist = Math.hypot(neighbor.worldPos.x - cube.worldPos.x, neighbor.worldPos.z - cube.worldPos.z);
-          if (dist <= 1.45) {
-            this.triggerTNT(neighbor, true);
-          }
-        }
-      }
-    }
+    // Removed: brute-force world proximity scan over all grid rows.
+    // The explicit 6-neighbor adjacency check above already covers all
+    // geometrically adjacent cells in the diamond grid.
   }
 
   // Update Cracked Earth Fault Cubes: 2s vibration tremor, then collapse off mountain

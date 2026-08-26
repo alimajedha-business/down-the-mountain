@@ -122,6 +122,10 @@ export class Game {
       this.hud.setShield(remaining, total);
     };
 
+    this.player.onMudUpdate = (remaining, total) => {
+      this.hud.setMud(remaining, total);
+    };
+
     this.player.onDeath = (reason) => {
       this.handleGameOver(reason);
     };
@@ -153,6 +157,7 @@ export class Game {
 
     this.hud.setScore(0);
     this.hud.setShield(0, 1);
+    this.hud.setMud(0, 1);
     this.hud.show();
     this.input.setEnabled(true);
   }
@@ -254,11 +259,35 @@ export class Game {
           isShielded,
           (tntR, tntC) => {
             const playerPos = this.player.charMesh.root.position;
+            const playerR = this.player.gridPos.r;
+            const playerC = this.player.gridPos.c;
+
+            // Check if player is on the exploding cube itself
             const cube = this.grid.getCube(tntR, tntC);
             const cubePos = cube ? cube.worldPos : this.grid.getWorldPosition(tntR, tntC);
             const dist = Math.hypot(playerPos.x - cubePos.x, playerPos.z - cubePos.z);
-            const isOnCube = (this.player.gridPos.r === tntR && this.player.gridPos.c === tntC) || dist < 0.75;
-            if (isOnCube && !isShielded && !this.player.isDead) {
+            let isInBlastRadius = (playerR === tntR && playerC === tntC) || dist < 0.75;
+
+            // Check if player is on any adjacent cube (6-neighbor diamond grid)
+            if (!isInBlastRadius) {
+              const isOdd = tntR % 2 !== 0;
+              const adjacentCoords = [
+                this.grid.getLeftCell(tntR, tntC),
+                this.grid.getRightCell(tntR, tntC),
+                { r: tntR, c: tntC - 1 },
+                { r: tntR, c: tntC + 1 },
+                { r: tntR - 1, c: isOdd ? tntC : tntC - 1 },
+                { r: tntR - 1, c: isOdd ? tntC + 1 : tntC }
+              ];
+              for (const coord of adjacentCoords) {
+                if (playerR === coord.r && playerC === coord.c) {
+                  isInBlastRadius = true;
+                  break;
+                }
+              }
+            }
+
+            if (isInBlastRadius && !isShielded && !this.player.isDead) {
               this.player.die('You were caught in a TNT explosion!');
             }
 

@@ -16,16 +16,36 @@ export class ParticleSystem {
     this.yellowMat = new THREE.MeshBasicMaterial({ color: 0xffeb3b });
     this.cyanMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
     this.redMat = new THREE.MeshBasicMaterial({ color: 0xff1744 });
+    this.mudMat = new THREE.MeshBasicMaterial({ color: 0x6d4c2a });
+    this.mudDarkMat = new THREE.MeshBasicMaterial({ color: 0x4a3218 });
+
+    // Pre-created shatter material palettes (avoids per-particle shader compilation)
+    this.shatterPalettes = new Map();
+  }
+
+  // Get or create a shared material palette for shatter effects
+  getShatterPalette(mainColor) {
+    if (this.shatterPalettes.has(mainColor)) {
+      return this.shatterPalettes.get(mainColor);
+    }
+    const palette = [
+      new THREE.MeshLambertMaterial({ color: mainColor, flatShading: true }),
+      new THREE.MeshLambertMaterial({ color: 0x00b4d8, flatShading: true }),
+      new THREE.MeshLambertMaterial({ color: 0x1a1a1a, flatShading: true }),
+      new THREE.MeshLambertMaterial({ color: 0xffeb3b, flatShading: true }),
+      new THREE.MeshLambertMaterial({ color: 0xff1744, flatShading: true })
+    ];
+    this.shatterPalettes.set(mainColor, palette);
+    return palette;
   }
 
   // Dramatic Voxel Character Explosion when failing
   spawnCharacterShatter(position, mainColor = 0x64dd17) {
-    const colors = [mainColor, 0x00b4d8, 0x1a1a1a, 0xffeb3b, 0xff1744];
+    const palette = this.getShatterPalette(mainColor);
     const count = 24;
 
     for (let i = 0; i < count; i++) {
-      const col = colors[i % colors.length];
-      const mat = new THREE.MeshLambertMaterial({ color: col, flatShading: true });
+      const mat = palette[i % palette.length];
       const mesh = new THREE.Mesh(this.cubeGeo, mat);
 
       mesh.position.copy(position);
@@ -255,6 +275,39 @@ export class ParticleSystem {
   // Bear Shatter on Defeat (Brown voxel burst)
   spawnBearShatter(position) {
     this.spawnCharacterShatter(position, 0x5d4037);
+  }
+
+  // Mud / Clay Splatter (brown globs when stepping on dirt)
+  spawnMudSplatter(position) {
+    const count = 8;
+    const mats = [this.mudMat, this.mudDarkMat];
+    for (let i = 0; i < count; i++) {
+      const mat = mats[i % mats.length];
+      const mesh = new THREE.Mesh(this.cubeGeo, mat);
+      mesh.scale.set(0.5, 0.3, 0.5);
+      mesh.position.set(
+        position.x + (Math.random() - 0.5) * 0.3,
+        position.y,
+        position.z + (Math.random() - 0.5) * 0.3
+      );
+
+      const angle = (i / count) * Math.PI * 2;
+      const speed = 0.8 + Math.random() * 1.2;
+
+      this.scene.add(mesh);
+      this.particles.push({
+        mesh,
+        vx: Math.cos(angle) * speed,
+        vy: 1.2 + Math.random() * 1.0,
+        vz: Math.sin(angle) * speed,
+        rotX: Math.random() * 4,
+        rotY: Math.random() * 4,
+        rotZ: Math.random() * 4,
+        gravity: 6.0,
+        life: 0.5,
+        maxLife: 0.5
+      });
+    }
   }
 
   update(delta) {

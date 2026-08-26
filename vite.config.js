@@ -7,6 +7,7 @@ export default defineConfig({
     host: true
   },
   build: {
-    target: 'esnext'
+    target: 'esnext',
+    assetsInlineLimit: 0
   }
 });

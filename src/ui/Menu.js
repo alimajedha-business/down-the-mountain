@@ -22,15 +22,13 @@ export class Menu {
     // Play Button (TAP TO PLAY)
     const btnPlay = document.getElementById('btn-play');
     if (btnPlay) {
-      const handlePlay = (e) => {
+      btnPlay.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         this.audio.playClick();
         this.hideMenu();
         this.onStartGame();
-      };
-      btnPlay.addEventListener('click', handlePlay);
-      btnPlay.addEventListener('touchend', handlePlay);
+      });
     }
 
     // Sound Toggle Button

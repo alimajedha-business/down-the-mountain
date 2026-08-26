@@ -3,10 +3,11 @@ export class HUD {
   constructor(options = {}) {
     this.hudElement = document.getElementById('game-hud');
     this.scoreText = document.getElementById('hud-score');
-    this.starsText = document.getElementById('hud-stars');
     this.shieldHud = document.getElementById('shield-hud');
     this.shieldBar = document.getElementById('shield-bar-fill');
     this.shieldTimeText = document.getElementById('shield-timer-text');
+    this.mudHud = document.getElementById('mud-hud');
+    this.mudTimeText = document.getElementById('mud-timer-text');
     this.btnPause = document.getElementById('btn-pause');
 
     this.onPauseClick = options.onPauseClick || (() => {});
@@ -31,9 +32,7 @@ export class HUD {
     if (this.scoreText) this.scoreText.textContent = val.toString();
   }
 
-  setStars(val) {
-    if (this.starsText) this.starsText.textContent = val.toString();
-  }
+
 
   setShield(remaining, total) {
     if (!this.shieldHud) return;
@@ -45,6 +44,19 @@ export class HUD {
       if (this.shieldTimeText) this.shieldTimeText.textContent = `${remaining.toFixed(1)}s`;
     } else {
       this.shieldHud.classList.add('hidden');
+    }
+  }
+
+  setMud(remaining, total = 3) {
+    if (!this.mudHud) return;
+
+    if (remaining > 0) {
+      this.mudHud.classList.remove('hidden');
+      if (this.mudTimeText) {
+        this.mudTimeText.textContent = `${remaining} ${remaining === 1 ? 'HOP' : 'HOPS'}`;
+      }
+    } else {
+      this.mudHud.classList.add('hidden');
     }
   }
 }

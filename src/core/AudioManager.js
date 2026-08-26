@@ -428,29 +428,49 @@ export class AudioManager {
     } catch (e) {}
   }
 
-  playSpringLaunch() {
+  playMudSquelch() {
     if (!this.enabled) return;
     try {
       this.ensureContext();
       if (!this.ctx) return;
       const t = this.ctx.currentTime;
+
+      // Low wet squelch oscillator
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
-
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(240, t);
-      osc.frequency.exponentialRampToValueAtTime(960, t + 0.25);
-
-      gain.gain.setValueAtTime(0.25, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-
+      osc.frequency.setValueAtTime(180, t);
+      osc.frequency.exponentialRampToValueAtTime(60, t + 0.18);
+      gain.gain.setValueAtTime(0.15, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
-
       osc.start(t);
-      osc.stop(t + 0.3);
+      osc.stop(t + 0.2);
+
+      // Noise layer for wet texture
+      const bufferSize = Math.floor(this.ctx.sampleRate * 0.15);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+      const noiseFilter = this.ctx.createBiquadFilter();
+      noiseFilter.type = 'lowpass';
+      noiseFilter.frequency.setValueAtTime(400, t);
+      noiseFilter.frequency.linearRampToValueAtTime(100, t + 0.15);
+      const noiseGain = this.ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.12, t);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+      noise.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(this.ctx.destination);
+      noise.start(t);
     } catch (e) {}
   }
+
 
   playGameOver() {
     if (!this.enabled) return;
@@ -478,31 +498,7 @@ export class AudioManager {
     } catch (e) {}
   }
 
-  playMissionComplete() {
-    if (!this.enabled) return;
-    try {
-      this.ensureContext();
-      if (!this.ctx) return;
-      const fanfare = [523.25, 659.25, 783.99, 1046.50, 1318.51];
-      fanfare.forEach((freq, idx) => {
-        const t = this.ctx.currentTime + idx * 0.06;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
 
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, t);
-
-        gain.gain.setValueAtTime(0.2, t);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-
-        osc.start(t);
-        osc.stop(t + 0.3);
-      });
-    } catch (e) {}
-  }
 
   playClick() {
     if (!this.enabled) return;

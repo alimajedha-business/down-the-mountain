@@ -103,7 +103,7 @@ export class CharacterMesh {
   }
 
   // --- Dynamic Jump & Idle Animations ---
-  update(delta, isMoving = false, hopProgress = 0) {
+  update(delta, isMoving = false, hopProgress = 0, isSticky = false) {
     // Shield Bubble Pulse
     if (this.shieldMesh && this.shieldMesh.visible) {
       const time = performance.now() * 0.005;
@@ -113,13 +113,24 @@ export class CharacterMesh {
 
     // Parabolic Hop Squash & Stretch Animation
     if (isMoving) {
-      const squashFactor = Math.sin(hopProgress * Math.PI);
-      this.bodyGroup.scale.set(
-        1.0 - squashFactor * 0.10,
-        1.0 + squashFactor * 0.18,
-        1.0 - squashFactor * 0.10
-      );
-      this.bodyGroup.rotation.x = Math.sin(hopProgress * Math.PI) * 0.15;
+      if (isSticky) {
+        // Sticky glue pull physics: elongated stretch as feet resist peeling off
+        const stickyStretch = Math.sin(Math.pow(hopProgress, 0.7) * Math.PI) * 0.32;
+        this.bodyGroup.scale.set(
+          1.0 - stickyStretch * 0.15,
+          1.0 + stickyStretch,
+          1.0 - stickyStretch * 0.15
+        );
+        this.bodyGroup.rotation.x = Math.sin(hopProgress * Math.PI) * 0.22;
+      } else {
+        const squashFactor = Math.sin(hopProgress * Math.PI);
+        this.bodyGroup.scale.set(
+          1.0 - squashFactor * 0.10,
+          1.0 + squashFactor * 0.18,
+          1.0 - squashFactor * 0.10
+        );
+        this.bodyGroup.rotation.x = Math.sin(hopProgress * Math.PI) * 0.15;
+      }
     } else {
       const time = performance.now() * 0.003;
       const idleSquash = 1.0 + Math.sin(time) * 0.025;

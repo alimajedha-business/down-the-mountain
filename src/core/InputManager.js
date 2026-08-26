@@ -8,8 +8,6 @@ export class InputManager {
     this.onAction = options.onAction || (() => {});
 
     this.enabled = true;
-    this.touchStartX = 0;
-    this.touchStartY = 0;
 
     this.initKeyboard();
     this.initTouch();
@@ -59,33 +57,6 @@ export class InputManager {
     }
     if (rightZone) {
       rightZone.addEventListener('pointerdown', handleRight);
-    }
-
-    // Touch swipe fallback on canvas container
-    const canvasContainer = document.getElementById('canvas-container');
-    if (canvasContainer) {
-      canvasContainer.addEventListener('touchstart', (e) => {
-        if (e.touches.length > 0) {
-          this.touchStartX = e.touches[0].clientX;
-          this.touchStartY = e.touches[0].clientY;
-        }
-      }, { passive: true });
-
-      canvasContainer.addEventListener('touchend', (e) => {
-        if (e.changedTouches.length > 0) {
-          const deltaX = e.changedTouches[0].clientX - this.touchStartX;
-          const deltaY = e.changedTouches[0].clientY - this.touchStartY;
-
-          // If quick swipe horizontally
-          if (Math.abs(deltaX) > 30 && Math.abs(deltaX) > Math.abs(deltaY)) {
-            if (deltaX < 0) {
-              if (this.enabled) this.onMoveLeft();
-            } else {
-              if (this.enabled) this.onMoveRight();
-            }
-          }
-        }
-      }, { passive: true });
     }
   }
 }

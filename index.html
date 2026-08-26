@@ -7,6 +7,13 @@
   <title>Down the Mountain</title>
   <meta name="description"
     content="Hop down the endless isometric mountain! Dodge spikes, cars, lava, and TNT, ride rivers, and collect stars!">
+  <meta name="theme-color" content="#4a156e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta property="og:title" content="Down the Mountain">
+  <meta property="og:description" content="Hop down the endless isometric mountain! Dodge hazards, ride rivers, and collect stars!">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛰️</text></svg>">
   <!-- Google Fonts: Fredoka One for arcade score and UI -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,6 +55,12 @@
             <path fill="#00E5FF" d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
           </svg>
           <span id="shield-timer-text">4.0s</span>
+        </div>
+
+        <!-- Mud Slowdown Indicator -->
+        <div id="mud-hud" class="mud-indicator hidden">
+          <span class="mud-icon">🟤</span>
+          <span id="mud-timer-text">3 HOPS</span>
         </div>
       </header>
 
@@ -103,8 +116,15 @@
               <div class="guide-card">
                 <div class="guide-icon safe-bg">🟩</div>
                 <div class="guide-text">
-                  <h3>Grass & Dirt Cubes</h3>
+                  <h3>Grass Cube</h3>
                   <p>Safe to land on. Keep moving downwards!</p>
+                </div>
+              </div>
+              <div class="guide-card">
+                <div class="guide-icon" style="color: #6d4c2a;">🟤</div>
+                <div class="guide-text">
+                  <h3>Clay / Mud Cube</h3>
+                  <p>Sticky mud clings to feet, slowing your next 3 jumps!</p>
                 </div>
               </div>
               <div class="guide-card">

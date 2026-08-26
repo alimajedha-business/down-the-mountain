@@ -31,12 +31,21 @@ export class Player {
     this.shieldTimer = 0;
     this.cubeIdleTimer = 0;
 
+    // Delta-based river slide timer (replaces setTimeout)
+    this.slideDelayTimer = 0;
+    this.slideNextCell = null;
+    this.slideDir = null;
+
+    // Mud/Clay sticky jump counter & hop state
+    this.mudStickyJumps = 0;
+    this.isCurrentHopSticky = false;
+
     // Callbacks
     this.onScoreUpdate = null;
     this.onStarCollect = null;
     this.onShieldUpdate = null;
+    this.onMudUpdate = null;
     this.onDeath = null;
-    this.onEvent = null;
 
     this.reset();
   }
@@ -48,6 +57,11 @@ export class Player {
     this.isSliding = false;
     this.shieldTimer = 0;
     this.cubeIdleTimer = 0;
+    this.slideDelayTimer = 0;
+    this.slideNextCell = null;
+    this.slideDir = null;
+    this.mudStickyJumps = 0;
+    this.isCurrentHopSticky = false;
     this.targetRotY = 0;
     this.charMesh.setShieldActive(false);
     this.charMesh.root.visible = true;
@@ -97,7 +111,24 @@ export class Player {
     const targetPos = this.grid.getWorldPosition(targetR, targetC);
     this.hopEndPos.set(targetPos.x, targetPos.y + 0.5, targetPos.z);
     this.hopProgress = 0;
-    this.hopDuration = isSlide ? GAME_CONFIG.RIVER_SLIDE_SPEED : GAME_CONFIG.HOP_DURATION;
+
+    const baseDuration = isSlide ? GAME_CONFIG.RIVER_SLIDE_SPEED : GAME_CONFIG.HOP_DURATION;
+    const isStickyHop = this.mudStickyJumps > 0 && !isSlide;
+
+    if (isStickyHop) {
+      this.isCurrentHopSticky = true;
+      this.hopDuration = baseDuration * GAME_CONFIG.MUD_HOP_MULTIPLIER;
+      this.mudStickyJumps--;
+      if (this.onMudUpdate) {
+        this.onMudUpdate(this.mudStickyJumps, GAME_CONFIG.DIRT_STICKY_JUMPS);
+      }
+      this.audio.playMudSquelch();
+      this.particles.spawnMudSplatter(this.hopStartPos);
+    } else {
+      this.isCurrentHopSticky = false;
+      this.hopDuration = baseDuration;
+    }
+
     this.gridPos = { r: targetR, c: targetC };
 
     if (!isSlide) {
@@ -106,9 +137,6 @@ export class Player {
 
     if (this.onScoreUpdate) {
       this.onScoreUpdate(targetR);
-    }
-    if (this.onEvent) {
-      this.onEvent('reach_score', targetR);
     }
   }
 
@@ -210,10 +238,20 @@ export class Player {
           this.die('You were impaled by spike traps!');
         }
         break;
+
+      case CUBE_TYPES.DIRT:
+        // Mud/clay glue sticks to feet, slowing movement for 3 jumps
+        this.mudStickyJumps = GAME_CONFIG.DIRT_STICKY_JUMPS;
+        this.audio.playMudSquelch();
+        this.particles.spawnMudSplatter(this.charMesh.root.position);
+        if (this.onMudUpdate) {
+          this.onMudUpdate(this.mudStickyJumps, GAME_CONFIG.DIRT_STICKY_JUMPS);
+        }
+        break;
     }
   }
 
-  // Waterfall Slide: Slides along the waterfall exit path to the next cube below
+  // Waterfall Slide: Uses delta-based timer (pause-safe) instead of setTimeout
   processWaterfallSlide(currentRiverCube) {
     this.isSliding = true;
     this.audio.playRiverSlide();
@@ -226,16 +264,9 @@ export class Player {
       ? this.grid.getLeftCell(this.gridPos.r, this.gridPos.c)
       : this.grid.getRightCell(this.gridPos.r, this.gridPos.c);
 
-    setTimeout(() => {
-      if (!this.isDead) {
-        this.isSliding = false;
-        if (this.grid.isCellValid(nextCell.r, nextCell.c)) {
-          this.initiateHop(nextCell.r, nextCell.c, true);
-        } else {
-          this.initiateFall(nextCell.r, nextCell.c);
-        }
-      }
-    }, GAME_CONFIG.RIVER_SLIDE_SPEED * 1000);
+    // Queue the slide transition via delta timer (processed in update())
+    this.slideDelayTimer = GAME_CONFIG.RIVER_SLIDE_SPEED;
+    this.slideNextCell = nextCell;
   }
 
   activateShield(duration) {
@@ -322,25 +353,52 @@ export class Player {
       );
     }
 
+    // Delta-based river slide delay (pause-safe, replaces setTimeout)
+    if (this.isSliding && this.slideDelayTimer > 0) {
+      this.slideDelayTimer -= delta;
+      if (this.slideDelayTimer <= 0) {
+        this.slideDelayTimer = 0;
+        this.isSliding = false;
+        if (!this.isDead && this.slideNextCell) {
+          const nextCell = this.slideNextCell;
+          this.slideNextCell = null;
+          if (this.grid.isCellValid(nextCell.r, nextCell.c)) {
+            this.initiateHop(nextCell.r, nextCell.c, true);
+          } else {
+            this.initiateFall(nextCell.r, nextCell.c);
+          }
+        }
+      }
+    }
+
     if (this.isMoving) {
       this.hopProgress += delta / this.hopDuration;
       if (this.hopProgress >= 1.0) {
         this.hopProgress = 1.0;
         this.charMesh.root.position.copy(this.hopEndPos);
+        const wasSticky = this.isCurrentHopSticky;
+        this.isCurrentHopSticky = false;
         if (!this.isDead) {
+          if (wasSticky) {
+            this.particles.spawnMudSplatter(this.charMesh.root.position);
+          }
           this.onLanded();
         }
       } else {
-        this.charMesh.root.position.x = THREE.MathUtils.lerp(this.hopStartPos.x, this.hopEndPos.x, this.hopProgress);
-        this.charMesh.root.position.z = THREE.MathUtils.lerp(this.hopStartPos.z, this.hopEndPos.z, this.hopProgress);
+        const progress = this.isCurrentHopSticky
+          ? Math.pow(this.hopProgress, 1.15)
+          : this.hopProgress;
 
-        const linearY = THREE.MathUtils.lerp(this.hopStartPos.y, this.hopEndPos.y, this.hopProgress);
-        const arcY = this.isSliding ? 0 : Math.sin(this.hopProgress * Math.PI) * GAME_CONFIG.HOP_HEIGHT;
+        this.charMesh.root.position.x = THREE.MathUtils.lerp(this.hopStartPos.x, this.hopEndPos.x, progress);
+        this.charMesh.root.position.z = THREE.MathUtils.lerp(this.hopStartPos.z, this.hopEndPos.z, progress);
+
+        const linearY = THREE.MathUtils.lerp(this.hopStartPos.y, this.hopEndPos.y, progress);
+        const arcY = this.isSliding ? 0 : Math.sin(this.hopProgress * Math.PI) * (this.isCurrentHopSticky ? GAME_CONFIG.HOP_HEIGHT * 0.9 : GAME_CONFIG.HOP_HEIGHT);
         this.charMesh.root.position.y = linearY + arcY;
       }
     }
 
-    if (!this.isDead && !this.isMoving) {
+    if (!this.isDead && !this.isMoving && !this.isSliding) {
       const cube = this.grid.getCube(this.gridPos.r, this.gridPos.c);
       if (cube) {
         if (cube.type === CUBE_TYPES.TRAP && cube.spikesActive && this.shieldTimer <= 0) {
@@ -351,6 +409,6 @@ export class Player {
       }
     }
 
-    this.charMesh.update(delta, this.isMoving, this.hopProgress);
+    this.charMesh.update(delta, this.isMoving, this.hopProgress, this.isCurrentHopSticky);
   }
 }

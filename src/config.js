@@ -15,6 +15,8 @@ export const GAME_CONFIG = {
   HOP_DURATION: 0.14,
   HOP_HEIGHT: 0.55,
   RIVER_SLIDE_SPEED: 0.15,
+  DIRT_STICKY_JUMPS: 3,        // Mud/clay glue slowdown lasts for 3 jumps
+  MUD_HOP_MULTIPLIER: 2.5,     // Hop takes 2.5x longer when glue/mud is stuck to feet
 
   // Hazard Timers (Exact specifications)
   SHIELD_DURATION: 4.0,
@@ -51,7 +53,6 @@ export const CUBE_TYPES = {
   TRAP: 'trap',
   TNT: 'tnt',
   SHIELD: 'shield',
-  ARROW: 'arrow',
 };
 
 export const BIOMES = [
