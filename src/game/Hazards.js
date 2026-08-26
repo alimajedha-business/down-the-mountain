@@ -68,7 +68,7 @@ export class Hazards {
     this.updateCracked(delta);
   }
 
-  // Spike Traps: 1.0s Hidden (safe) <-> 1.0s Visible (fatal)
+  // Spike Traps: 2.0s Hidden (safe) <-> 1.0s Visible (fatal)
   // Performance: Only iterates registered trap cubes, not all grid cubes
   updateSpikes() {
     const timeSec = performance.now() / 1000;

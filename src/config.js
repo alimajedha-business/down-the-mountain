@@ -26,8 +26,8 @@ export const GAME_CONFIG = {
   TNT_INITIAL_FUSE: 2.0,
   TNT_CHAIN_FUSE: 1.0,
 
-  // Trap: 1.0s hidden (safe) <-> 1.0s visible (fatal)
-  SPIKE_CYCLE_PERIOD: 2.0,
+  // Trap: 2.0s hidden (safe) <-> 1.0s visible (fatal)
+  SPIKE_CYCLE_PERIOD: 3.0,
   SPIKE_ACTIVE_TIME: 1.0,
 
   // Top-Down Mountain Collapse (Linear Constant Trend)
