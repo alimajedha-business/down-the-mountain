@@ -1,5 +1,5 @@
-// Hazard Mechanics: Spike Trap 1s Cycles, TNT 3s/1s Domino Chains, and Cracked Blocks
-import { GAME_CONFIG, CUBE_TYPES } from '../config.js';
+// Hazard Mechanics: Spike Trap Cycles, TNT Domino Chains, and Cracked Blocks
+import { GAME_CONFIG, CUBE_TYPES, getTierForScore } from '../config.js';
 
 export class Hazards {
   constructor(grid, voxelMeshes, particles, audio) {
@@ -68,18 +68,27 @@ export class Hazards {
     this.updateCracked(delta);
   }
 
-  // Spike Traps: 2.0s Hidden (safe) <-> 1.0s Visible (fatal)
+  // Spike Traps: Tier-scaled Hidden (safe) <-> Visible (fatal) cycles
   // Performance: Only iterates registered trap cubes, not all grid cubes
   updateSpikes() {
     const timeSec = performance.now() / 1000;
-    const cycleTime = timeSec % GAME_CONFIG.SPIKE_CYCLE_PERIOD;
-    const isActive = cycleTime < GAME_CONFIG.SPIKE_ACTIVE_TIME;
 
     for (const cube of this.trapCubes) {
       if (cube.collapsed || !cube.mesh) {
         this.trapCubes.delete(cube);
         continue;
       }
+
+      // Tier-scaled spike cycle
+      const tier = getTierForScore(cube.r);
+      const safeTime = tier.spikeCycleSafe || 2.0;
+      const activeTime = tier.spikeCycleActive || 1.0;
+      const totalPeriod = safeTime + activeTime;
+
+      // Small deterministic offset per row/column for organic rhythm
+      const offset = (cube.r * 0.4 + cube.c * 0.25) % totalPeriod;
+      const cycleTime = (timeSec + offset) % totalPeriod;
+      const isActive = cycleTime < activeTime;
 
       cube.spikesActive = isActive;
       const spikeMesh = cube.mesh.userData.spikeMesh;

@@ -1,5 +1,5 @@
 // Main Game Orchestrator for Down the Mountain 3D
-import { GAME_CONFIG, BIOMES } from './config.js';
+import { GAME_CONFIG, BIOMES, getTierForScore } from './config.js';
 import { Storage } from './core/Storage.js';
 import { AudioManager } from './core/AudioManager.js';
 import { InputManager } from './core/InputManager.js';
@@ -31,6 +31,8 @@ export class Game {
     this.state = STATES.MENU;
     this.currentScore = 0;
     this.starsCollectedInRun = 0;
+    this.currentTierId = 1;
+    this.hasCelebratedNewBest = false;
 
     // Core Systems
     this.audio = new AudioManager();
@@ -111,6 +113,37 @@ export class Game {
       this.currentScore = row;
       this.hud.setScore(this.currentScore);
       this.updateBiomeProgress(this.currentScore);
+
+      // Check Stage / Tier progression unlocks (Score 21, 41, 71)
+      const tier = getTierForScore(this.currentScore);
+      if (tier.id > this.currentTierId) {
+        this.currentTierId = tier.id;
+        this.hud.showTierAnnouncement(tier);
+        this.audio.playTierUnlocked();
+        if (tier.id === 3) {
+          this.audio.playBearRoar();
+        } else if (tier.id === 4) {
+          this.audio.playMagmaBurn();
+        }
+      }
+
+      // Check Mid-Run New Best Score Celebration
+      const prevBest = Storage.getHighScore();
+      if (prevBest >= 10 && this.currentScore === prevBest + 1 && !this.hasCelebratedNewBest) {
+        this.hasCelebratedNewBest = true;
+        this.hud.showNewBestMidRunToast();
+        this.audio.playNewBestMidRun();
+      }
+    };
+
+    this.player.onComboUpdate = (combo) => {
+      this.hud.setCombo(combo);
+      if (combo >= 4) {
+        this.audio.playCombo(combo);
+        if (combo % 5 === 0) {
+          this.particles.spawnStarSparkles(this.player.charMesh.root.position);
+        }
+      }
     };
 
     this.player.onStarCollect = (amount) => {
@@ -141,6 +174,8 @@ export class Game {
     this.state = STATES.PLAYING;
     this.currentScore = 0;
     this.starsCollectedInRun = 0;
+    this.currentTierId = 1;
+    this.hasCelebratedNewBest = false;
 
     this.menu.hideMenu();
     this.gameOverModal.hide();
@@ -158,6 +193,7 @@ export class Game {
     this.hud.setScore(0);
     this.hud.setShield(0, 1);
     this.hud.setMud(0, 1);
+    this.hud.setCombo(0);
     this.hud.show();
     this.input.setEnabled(true);
   }

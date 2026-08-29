@@ -1,6 +1,6 @@
-// Cubic Bear Roamer Entity: High Frequency Spawns (~12-18s), Guaranteed Safe Circular Patrol (4 Cubes), and Player Defeat
+// Cubic Bear Roamer Entity: Score-Tiered Spawns (Score 41+), Safe Circular Patrol, and Player Defeat
 import * as THREE from 'three';
-import { GAME_CONFIG, CUBE_TYPES } from '../config.js';
+import { GAME_CONFIG, CUBE_TYPES, getTierForScore } from '../config.js';
 import { BearMesh } from '../graphics/BearMesh.js';
 
 export class BearChaser {
@@ -46,7 +46,15 @@ export class BearChaser {
     this.currentWaypointIdx = 0;
     this.nextWaypointIdx = 0;
     this.roamStepsRemaining = 0;
-    this.spawnCooldown = 0.5; // Fast initial spawn upon starting game
+    this.spawnCooldown = 0;
+  }
+
+  getNextCooldown() {
+    const r = this.player ? this.player.gridPos.r : 0;
+    const tier = getTierForScore(r);
+    const minCd = tier.bearCooldownMin || 16.0;
+    const maxCd = tier.bearCooldownMax || 22.0;
+    return minCd + Math.random() * (maxCd - minCd);
   }
 
   // Find or guarantee a closed circular loop of 4 adjacent safe cubes on the mountain grid
@@ -111,15 +119,18 @@ export class BearChaser {
     return null;
   }
 
-  // Attempt to spawn the bear on a safe circular roaming loop ahead of the player
+  // Attempt to spawn the bear on a safe circular roaming loop ahead of the player (Score 41+)
   trySpawn() {
     if (this.state !== 'INACTIVE') return;
     if (!this.player || this.player.isDead) return;
-    if (this.player.gridPos.r < 3) return; // Starts as soon as player reaches row 3
+
+    // Check tier allowance: Bear roamer only spawns starting at score 41 (Tier 3+)
+    const tier = getTierForScore(this.player.gridPos.r);
+    if (!tier.hasBear || this.player.gridPos.r < 41) return;
     if (this.spawnCooldown > 0) return;
 
     // Search for a safe 4-cube circular loop ahead of the player
-    const minR = Math.max(1, this.player.gridPos.r + 2);
+    const minR = Math.max(41, this.player.gridPos.r + 2);
     const maxR = this.player.gridPos.r + 16;
     const loop = this.findSafeCircularLoop(minR, maxR);
 
@@ -153,6 +164,7 @@ export class BearChaser {
     this.state = 'ROAMING';
     this.isMoving = false;
     this.hopPauseTimer = 0.30;
+    this.hopDuration = (tier.id >= 4) ? 0.42 : 0.48;
 
     this.audio.playBearRoar();
     this.particles.spawnBearPoof(this.bearMesh.root.position);
@@ -270,7 +282,7 @@ export class BearChaser {
         this.bearMesh.root.rotation.set(0, 0, 0);
         this.bearMesh.bodyGroup.rotation.set(0, 0, 0);
         this.state = 'INACTIVE';
-        this.spawnCooldown = 12.0 + Math.random() * 6.0; // Higher frequency (~12-18s)
+        this.spawnCooldown = this.getNextCooldown();
       }
     };
     anim();
@@ -289,7 +301,7 @@ export class BearChaser {
     this.bearMesh.root.rotation.set(0, 0, 0);
     this.bearMesh.bodyGroup.rotation.set(0, 0, 0);
     this.state = 'INACTIVE';
-    this.spawnCooldown = 12.0 + Math.random() * 6.0; // Higher frequency (~12-18s)
+    this.spawnCooldown = this.getNextCooldown();
   }
 
   despawnPoof() {
@@ -299,7 +311,7 @@ export class BearChaser {
     this.bearMesh.root.rotation.set(0, 0, 0);
     this.bearMesh.bodyGroup.rotation.set(0, 0, 0);
     this.state = 'INACTIVE';
-    this.spawnCooldown = 12.0 + Math.random() * 6.0; // Higher frequency (~12-18s)
+    this.spawnCooldown = this.getNextCooldown();
   }
 
   update(delta) {

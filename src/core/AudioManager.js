@@ -521,4 +521,87 @@ export class AudioManager {
       osc.stop(t + 0.03);
     } catch (e) {}
   }
+
+  // Triumphant fanfare when unlocking a new stage tier (Score 21, 41, 71)
+  playTierUnlocked() {
+    if (!this.enabled) return;
+    try {
+      this.ensureContext();
+      if (!this.ctx) return;
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+      notes.forEach((freq, idx) => {
+        const t = this.ctx.currentTime + idx * 0.08;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, t);
+
+        gain.gain.setValueAtTime(0.18, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(t);
+        osc.stop(t + 0.28);
+      });
+    } catch (e) {}
+  }
+
+  // Pentatonic combo chime that raises in pitch as streak increases
+  playCombo(comboCount = 4) {
+    if (!this.enabled) return;
+    try {
+      this.ensureContext();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const pentatonic = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.66];
+      const noteIdx = Math.min(pentatonic.length - 1, (comboCount - 4) % pentatonic.length);
+      const freq = pentatonic[noteIdx];
+
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.05, t + 0.12);
+
+      gain.gain.setValueAtTime(0.14, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + 0.14);
+    } catch (e) {}
+  }
+
+  // High score beat mid-run celebration
+  playNewBestMidRun() {
+    if (!this.enabled) return;
+    try {
+      this.ensureContext();
+      if (!this.ctx) return;
+      const notes = [440.0, 554.37, 659.25, 880.0, 1108.73];
+      notes.forEach((freq, idx) => {
+        const t = this.ctx.currentTime + idx * 0.06;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, t);
+
+        gain.gain.setValueAtTime(0.16, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(t);
+        osc.stop(t + 0.22);
+      });
+    } catch (e) {}
+  }
 }

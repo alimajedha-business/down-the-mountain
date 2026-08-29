@@ -18,8 +18,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700;800;900&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/assets/index-PqWvj6V4.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-Dxk2owCs.css">
+  <script type="module" crossorigin src="/assets/index-E2OPs4-5.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-C-lm56Oz.css">
 </head>
 
 <body>
@@ -62,6 +62,24 @@
         <div id="mud-hud" class="mud-indicator hidden">
           <span class="mud-icon">🟤</span>
           <span id="mud-timer-text">3 HOPS</span>
+        </div>
+
+        <!-- Dynamic Combo Streak Indicator -->
+        <div id="combo-hud" class="combo-indicator hidden">
+          <span class="combo-bolt">⚡</span>
+          <span id="combo-count-text" class="combo-val">4x</span>
+          <span class="combo-label">COMBO!</span>
+        </div>
+
+        <!-- Stage / Tier Announcement Toast -->
+        <div id="stage-toast" class="stage-toast-banner hidden">
+          <div class="stage-toast-title" id="stage-toast-title">STAGE 2</div>
+          <div class="stage-toast-sub" id="stage-toast-sub">RAPID RIVERS & TNT!</div>
+        </div>
+
+        <!-- Mid-Run New Best Score Celebration -->
+        <div id="midrun-best-toast" class="midrun-best-toast hidden">
+          <span>👑 NEW BEST SCORE! 👑</span>
         </div>
       </header>
 
@@ -133,7 +151,10 @@
                   <div class="guide-icon-box safe-bg">🟩</div>
                   <div class="guide-card-head">
                     <h3>Grass Cube</h3>
-                    <span class="guide-badge badge-safe">SAFE</span>
+                    <div class="badge-row">
+                      <span class="guide-badge badge-safe">SAFE</span>
+                      <span class="guide-unlock-badge">SCORE 0+</span>
+                    </div>
                   </div>
                 </div>
                 <p class="guide-desc">Solid mountain terrain with striped grass. Standard safe footing for your descent.</p>
@@ -146,7 +167,10 @@
                   <div class="guide-icon-box mud-bg">🟤</div>
                   <div class="guide-card-head">
                     <h3>Clay / Mud</h3>
-                    <span class="guide-badge badge-slow">SLOWDOWN</span>
+                    <div class="badge-row">
+                      <span class="guide-badge badge-slow">SLOWDOWN</span>
+                      <span class="guide-unlock-badge">SCORE 0+</span>
+                    </div>
                   </div>
                 </div>
                 <p class="guide-desc">Wet sticky clay clings to your shoes. Slows down your <strong>next 3 hops</strong> by <strong>2.5× duration</strong>.</p>
@@ -159,7 +183,10 @@
                   <div class="guide-icon-box tree-bg">🌲</div>
                   <div class="guide-card-head">
                     <h3>Tree Cube</h3>
-                    <span class="guide-badge badge-obstacle">OBSTACLE</span>
+                    <div class="badge-row">
+                      <span class="guide-badge badge-obstacle">OBSTACLE</span>
+                      <span class="guide-unlock-badge">SCORE 0+</span>
+                    </div>
                   </div>
                 </div>
                 <p class="guide-desc">Dense cubic pine tree. Impassable barrier—hopping into a tree <strong>bounces you back</strong> in place.</p>
@@ -172,7 +199,10 @@
                   <div class="guide-icon-box river-bg">🌊</div>
                   <div class="guide-card-head">
                     <h3>Waterfall River</h3>
-                    <span class="guide-badge badge-slide">RAPID SLIDE</span>
+                    <div class="badge-row">
+                      <span class="guide-badge badge-slide">RAPID SLIDE</span>
+                      <span class="guide-unlock-badge badge-stage2">SCORE 21+</span>
+                    </div>
                   </div>
                 </div>
                 <p class="guide-desc">Continuous crystal water rapids. Automatically sweeps you rapidly downhill (2–4 cubes) along the stream.</p>
@@ -185,7 +215,10 @@
                   <div class="guide-icon-box star-bg">⭐</div>
                   <div class="guide-card-head">
                     <h3>Star Cube</h3>
-                    <span class="guide-badge badge-collect">+5 SCORE & COIN</span>
+                    <div class="badge-row">
+                      <span class="guide-badge badge-collect">+5 SCORE & COIN</span>
+                      <span class="guide-unlock-badge">SCORE 0+</span>
+                    </div>
                   </div>
                 </div>
                 <p class="guide-desc">Contains a rotating golden star. Collect to gain <strong>+5 bonus score</strong> and <strong>+1 star coin</strong>.</p>
@@ -198,7 +231,10 @@
                   <div class="guide-icon-box shield-bg">🛡️</div>
                   <div class="guide-card-head">
                     <h3>Shield Power-Up</h3>
-                    <span class="guide-badge badge-powerup">4.0s INVULNERABLE</span>
+                    <div class="badge-row">
+                      <span class="guide-badge badge-powerup">4.0s INVULNERABLE</span>
+                      <span class="guide-unlock-badge">SCORE 0+</span>
+                    </div>
                   </div>
                 </div>
                 <p class="guide-desc">Grants a glowing forcefield for <strong>4.0 seconds</strong>. Protects against magma, spikes, TNT, and destroys the bear!</p>
@@ -211,7 +247,10 @@
                   <div class="guide-icon-box magma-bg">🌋</div>
                   <div class="guide-card-head">
                     <h3>Magma / Lava</h3>
-                    <span class="guide-badge badge-fatal">INSTANT FATAL</span>
+                    <div class="badge-row">
+                      <span class="guide-badge badge-fatal">INSTANT FATAL</span>
+                      <span class="guide-unlock-badge badge-stage4">SCORE 71+</span>
+                    </div>
                   </div>
                 </div>
                 <p class="guide-desc">Volcanic obsidian bedrock with glowing molten lava fissures. Instantly burns player on contact unless shielded.</p>
@@ -224,7 +263,10 @@
                   <div class="guide-icon-box cracked-bg">💥</div>
                   <div class="guide-card-head">
                     <h3>Cracked Earth</h3>
-                    <span class="guide-badge badge-collapse">2.0s COLLAPSE</span>
+                    <div class="badge-row">
+                      <span class="guide-badge badge-collapse">2.0s COLLAPSE</span>
+                      <span class="guide-unlock-badge badge-stage3">SCORE 41+</span>
+                    </div>
                   </div>
                 </div>
                 <p class="guide-desc">Unstable fractured stone. Triggers a <strong>2.0-second seismic tremor</strong> then collapses into the abyss.</p>
@@ -237,11 +279,14 @@
                   <div class="guide-icon-box spike-bg">⚙️</div>
                   <div class="guide-card-head">
                     <h3>Spike Trap</h3>
-                    <span class="guide-badge badge-cyclic">3.0s CYCLE</span>
+                    <div class="badge-row">
+                      <span class="guide-badge badge-cyclic">CYCLIC SPIKES</span>
+                      <span class="guide-unlock-badge badge-stage3">SCORE 41+</span>
+                    </div>
                   </div>
                 </div>
-                <p class="guide-desc">Metal stone grate with motorized spikes. Cycles <strong>2.0s Hidden (Safe)</strong> ↔ <strong>1.0s Raised (Fatal!)</strong>.</p>
-                <div class="guide-tip">⏱️ <strong>Timing:</strong> Cross right as the spikes retract for a full 2s safe window.</div>
+                <p class="guide-desc">Metal stone grate with motorized spikes. Cycles <strong>Hidden (Safe)</strong> ↔ <strong>Raised (Fatal!)</strong>.</p>
+                <div class="guide-tip">⏱️ <strong>Timing:</strong> Cross right as the spikes retract for a full safe window.</div>
               </div>
 
               <!-- 10. TNT Explosive Cube -->
@@ -250,7 +295,10 @@
                   <div class="guide-icon-box tnt-bg">🧨</div>
                   <div class="guide-card-head">
                     <h3>TNT Crate</h3>
-                    <span class="guide-badge badge-explosive">CHAIN EXPLOSION</span>
+                    <div class="badge-row">
+                      <span class="guide-badge badge-explosive">CHAIN EXPLOSION</span>
+                      <span class="guide-unlock-badge badge-stage2">SCORE 21+</span>
+                    </div>
                   </div>
                 </div>
                 <p class="guide-desc">Stepping on TNT lights a <strong>2.0s fuse</strong>. Detonation triggers all adjacent TNT with a fast <strong>1.0s domino fuse</strong>!</p>
@@ -263,7 +311,10 @@
                   <div class="guide-icon-box bear-bg">🐻</div>
                   <div class="guide-card-head">
                     <h3>Roaming Bear</h3>
-                    <span class="guide-badge badge-threat">APEX PREDATOR</span>
+                    <div class="badge-row">
+                      <span class="guide-badge badge-threat">APEX PREDATOR</span>
+                      <span class="guide-unlock-badge badge-stage3">SCORE 41+</span>
+                    </div>
                   </div>
                 </div>
                 <p class="guide-desc">Patrols a 4-cube circular diamond loop ahead of you. Fatal on contact, but <strong>Shield defeats it</strong>!</p>
@@ -276,10 +327,13 @@
                   <div class="guide-icon-box avalanche-bg">🏔️</div>
                   <div class="guide-card-head">
                     <h3>Avalanche</h3>
-                    <span class="guide-badge badge-world">CHASE COLLAPSE</span>
+                    <div class="badge-row">
+                      <span class="guide-badge badge-world">CHASE COLLAPSE</span>
+                      <span class="guide-unlock-badge">GLOBAL THREAT</span>
+                    </div>
                   </div>
                 </div>
-                <p class="guide-desc">Starts 3s into the run. Mountain collapses top-down <strong>1 row every 0.4 seconds</strong> chasing you downwards.</p>
+                <p class="guide-desc">Mountain collapses top-down chasing you downwards. Accelerates as you reach higher scores!</p>
                 <div class="guide-tip">🚀 <strong>Rule:</strong> Keep moving! Never idle on a single cube for over 2 seconds.</div>
               </div>
 

@@ -40,11 +40,16 @@ export class Player {
     this.mudStickyJumps = 0;
     this.isCurrentHopSticky = false;
 
+    // Fast-Rhythm Combo Streak System
+    this.comboCount = 0;
+    this.comboTimer = 0;
+
     // Callbacks
     this.onScoreUpdate = null;
     this.onStarCollect = null;
     this.onShieldUpdate = null;
     this.onMudUpdate = null;
+    this.onComboUpdate = null;
     this.onDeath = null;
 
     this.reset();
@@ -62,6 +67,8 @@ export class Player {
     this.slideDir = null;
     this.mudStickyJumps = 0;
     this.isCurrentHopSticky = false;
+    this.comboCount = 0;
+    this.comboTimer = 0;
     this.targetRotY = 0;
     this.charMesh.setShieldActive(false);
     this.charMesh.root.visible = true;
@@ -132,6 +139,16 @@ export class Player {
     this.gridPos = { r: targetR, c: targetC };
 
     if (!isSlide) {
+      if (this.comboTimer > 0) {
+        this.comboCount++;
+      } else {
+        this.comboCount = 1;
+      }
+      this.comboTimer = GAME_CONFIG.COMBO_WINDOW;
+      if (this.onComboUpdate) {
+        this.onComboUpdate(this.comboCount);
+      }
+
       this.audio.playJump(1.0 + (targetR % 10) * 0.02);
     }
 
@@ -399,6 +416,18 @@ export class Player {
     }
 
     if (!this.isDead && !this.isMoving && !this.isSliding) {
+      // Combo decay when idle
+      if (this.comboTimer > 0) {
+        this.comboTimer -= delta;
+        if (this.comboTimer <= 0) {
+          this.comboTimer = 0;
+          this.comboCount = 0;
+          if (this.onComboUpdate) {
+            this.onComboUpdate(0);
+          }
+        }
+      }
+
       const cube = this.grid.getCube(this.gridPos.r, this.gridPos.c);
       if (cube) {
         if (cube.type === CUBE_TYPES.TRAP && cube.spikesActive && this.shieldTimer <= 0) {

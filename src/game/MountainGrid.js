@@ -1,6 +1,6 @@
 // Symmetrical 5-4-5-4 Staggered Isometric Mountain Grid with Continuous Waterfall Streams
 import * as THREE from 'three';
-import { GAME_CONFIG, CUBE_TYPES } from '../config.js';
+import { GAME_CONFIG, CUBE_TYPES, getTierForScore } from '../config.js';
 
 // Reusable scratch vector to avoid per-call allocation
 const _scratchVec3 = new THREE.Vector3();
@@ -159,46 +159,50 @@ export class MountainGrid {
   }
 
   pickCubeType(r, c) {
+    const tier = getTierForScore(r);
+    const allowed = tier.allowedCubes;
+    const canHaveRiver = allowed.includes(CUBE_TYPES.RIVER);
+
     let isRiverTarget = false;
     let continueRiver = null;
 
-    const aboveRow = this.rows.get(r - 1);
-    if (aboveRow) {
-      for (const parentCube of aboveRow) {
-        if (!parentCube || parentCube.collapsed) continue;
+    if (canHaveRiver) {
+      const aboveRow = this.rows.get(r - 1);
+      if (aboveRow) {
+        for (const parentCube of aboveRow) {
+          if (!parentCube || parentCube.collapsed) continue;
 
-        // Check if targeted by continuous River
-        if (parentCube.type === CUBE_TYPES.RIVER && !isRiverTarget) {
-          const parentExitDir = parentCube.customData.riverDir || 'left';
-          const childCell = (parentExitDir === 'left')
-            ? this.getLeftCell(r - 1, parentCube.c)
-            : this.getRightCell(r - 1, parentCube.c);
+          // Check if targeted by continuous River
+          if (parentCube.type === CUBE_TYPES.RIVER && !isRiverTarget) {
+            const parentExitDir = parentCube.customData.riverDir || 'left';
+            const childCell = (parentExitDir === 'left')
+              ? this.getLeftCell(r - 1, parentCube.c)
+              : this.getRightCell(r - 1, parentCube.c);
 
-          if (childCell.c === c) {
-            isRiverTarget = true;
-            const streamLength = parentCube.customData.streamLength || 1;
-            // Balanced waterfall length: 2 to 4 cubes
-            if (streamLength < 2 || (streamLength < 4 && Math.random() < 0.55)) {
-              // Validate that the river exit from this cube won't go off-grid
-              const nextExitDir = Math.random() < 0.5 ? 'left' : 'right';
-              const nextCell = (nextExitDir === 'left')
-                ? this.getLeftCell(r, c)
-                : this.getRightCell(r, c);
-              if (this.isCellValid(nextCell.r, nextCell.c)) {
-                continueRiver = {
-                  type: CUBE_TYPES.RIVER,
-                  customData: {
-                    riverDir: nextExitDir,
-                    streamLength: streamLength + 1
-                  }
-                };
+            if (childCell.c === c) {
+              isRiverTarget = true;
+              const streamLength = parentCube.customData.streamLength || 1;
+              // Balanced waterfall length: 2 to 4 cubes
+              if (streamLength < 2 || (streamLength < 4 && Math.random() < 0.55)) {
+                // Validate that the river exit from this cube won't go off-grid
+                const nextExitDir = Math.random() < 0.5 ? 'left' : 'right';
+                const nextCell = (nextExitDir === 'left')
+                  ? this.getLeftCell(r, c)
+                  : this.getRightCell(r, c);
+                if (this.isCellValid(nextCell.r, nextCell.c)) {
+                  continueRiver = {
+                    type: CUBE_TYPES.RIVER,
+                    customData: {
+                      riverDir: nextExitDir,
+                      streamLength: streamLength + 1
+                    }
+                  };
+                } else {
+                  this.riverCooldown = 3;
+                }
               } else {
-                // Exit would go off-grid, end the river here
                 this.riverCooldown = 3;
               }
-            } else {
-              // River ended -> short cooldown between waterfalls
-              this.riverCooldown = 3;
             }
           }
         }
@@ -207,50 +211,132 @@ export class MountainGrid {
 
     if (continueRiver) return continueRiver;
 
+    // Shield cooldown gap (15-20 rows depending on tier)
+    const minShieldGap = (tier.id >= 4) ? 15 : 20;
+    const canShield = !isRiverTarget && (r - this.lastShieldRow) >= minShieldGap;
+
     const rand = Math.random();
 
-    if (rand < 0.34) {
-      return { type: CUBE_TYPES.SAFE };
-    } else if (rand < 0.44) {
-      return { type: CUBE_TYPES.DIRT };
-    } else if (rand < 0.54) {
-      // 10% Volcanic Magma Cubes
-      return { type: CUBE_TYPES.MAGMA };
-    } else if (rand < 0.64) {
-      return { type: CUBE_TYPES.TRAP };
-    } else if (rand < 0.74) {
-      return { type: CUBE_TYPES.TNT };
-    } else if (rand < 0.83) {
-      return { type: CUBE_TYPES.CRACKED };
-    } else if (rand < 0.90 && !isRiverTarget && this.riverCooldown <= 0) {
-      // Start a waterfall stream — validate exit won't go off-grid
-      const riverDir = Math.random() < 0.5 ? 'left' : 'right';
-      const exitCell = (riverDir === 'left')
-        ? this.getLeftCell(r, c)
-        : this.getRightCell(r, c);
-      if (this.isCellValid(exitCell.r, exitCell.c)) {
-        this.riverCooldown = 3;
-        return {
-          type: CUBE_TYPES.RIVER,
-          customData: {
-            riverDir,
-            streamLength: 1
-          }
-        };
+    // --- TIER 1: Score 0-20 (SAFE, DIRT, TREE, STAR, SHIELD only) ---
+    if (tier.id === 1) {
+      if (canShield && rand < 0.008) {
+        this.lastShieldRow = r;
+        return { type: CUBE_TYPES.SHIELD };
+      } else if (rand < 0.038) {
+        return { type: CUBE_TYPES.STAR };
+      } else if (rand < 0.14) {
+        return { type: CUBE_TYPES.TREE };
+      } else if (rand < 0.36) {
+        return { type: CUBE_TYPES.DIRT };
+      } else {
+        return { type: CUBE_TYPES.SAFE };
       }
-      // Fallback if exit invalid
-      return { type: CUBE_TYPES.SAFE };
-    } else if (rand < 0.95 && !isRiverTarget) {
-      return { type: CUBE_TYPES.TREE };
-    } else if (rand < 0.98) {
-      return { type: CUBE_TYPES.STAR };
-    } else if (rand < 0.99 && !isRiverTarget && (r - this.lastShieldRow) >= 20) {
-      // ~1% chance, with minimum 20-row gap between shields
+    }
+
+    // --- TIER 2: Score 21-40 (Adds RIVER and TNT) ---
+    if (tier.id === 2) {
+      if (canShield && rand < 0.008) {
+        this.lastShieldRow = r;
+        return { type: CUBE_TYPES.SHIELD };
+      } else if (rand < 0.038) {
+        return { type: CUBE_TYPES.STAR };
+      } else if (rand < 0.14 && !isRiverTarget && this.riverCooldown <= 0) {
+        const riverDir = Math.random() < 0.5 ? 'left' : 'right';
+        const exitCell = (riverDir === 'left') ? this.getLeftCell(r, c) : this.getRightCell(r, c);
+        if (this.isCellValid(exitCell.r, exitCell.c)) {
+          this.riverCooldown = 3;
+          return { type: CUBE_TYPES.RIVER, customData: { riverDir, streamLength: 1 } };
+        }
+        return { type: CUBE_TYPES.SAFE };
+      } else if (rand < 0.24) {
+        return { type: CUBE_TYPES.TNT };
+      } else if (rand < 0.36 && !isRiverTarget) {
+        return { type: CUBE_TYPES.TREE };
+      } else if (rand < 0.54) {
+        return { type: CUBE_TYPES.DIRT };
+      } else {
+        return { type: CUBE_TYPES.SAFE };
+      }
+    }
+
+    // --- TIER 3: Score 41-70 (Adds TRAP and CRACKED, Bear active in BearChaser) ---
+    if (tier.id === 3) {
+      if (canShield && rand < 0.010) {
+        this.lastShieldRow = r;
+        return { type: CUBE_TYPES.SHIELD };
+      } else if (rand < 0.040) {
+        return { type: CUBE_TYPES.STAR };
+      } else if (rand < 0.16) {
+        return { type: CUBE_TYPES.TRAP };
+      } else if (rand < 0.27) {
+        return { type: CUBE_TYPES.TNT };
+      } else if (rand < 0.36) {
+        return { type: CUBE_TYPES.CRACKED };
+      } else if (rand < 0.46 && !isRiverTarget && this.riverCooldown <= 0) {
+        const riverDir = Math.random() < 0.5 ? 'left' : 'right';
+        const exitCell = (riverDir === 'left') ? this.getLeftCell(r, c) : this.getRightCell(r, c);
+        if (this.isCellValid(exitCell.r, exitCell.c)) {
+          this.riverCooldown = 3;
+          return { type: CUBE_TYPES.RIVER, customData: { riverDir, streamLength: 1 } };
+        }
+        return { type: CUBE_TYPES.SAFE };
+      } else if (rand < 0.57 && !isRiverTarget) {
+        return { type: CUBE_TYPES.TREE };
+      } else if (rand < 0.67) {
+        return { type: CUBE_TYPES.DIRT };
+      } else {
+        return { type: CUBE_TYPES.SAFE };
+      }
+    }
+
+    // --- TIER 4: Score 71+ (Adds MAGMA and scales difficulty with depth) ---
+    const isDeep = r > 100;
+    const magmaWeight = isDeep ? 0.14 : 0.11;
+    const trapWeight = isDeep ? 0.13 : 0.11;
+    const tntWeight = isDeep ? 0.12 : 0.10;
+    const crackedWeight = isDeep ? 0.10 : 0.08;
+    const riverWeight = 0.09;
+    const treeWeight = 0.10;
+    const dirtWeight = isDeep ? 0.06 : 0.08;
+
+    if (canShield && rand < (isDeep ? 0.015 : 0.012)) {
       this.lastShieldRow = r;
       return { type: CUBE_TYPES.SHIELD };
-    } else {
+    } else if (rand < 0.040) {
+      return { type: CUBE_TYPES.STAR };
+    }
+
+    let p = 0.04;
+    p += magmaWeight;
+    if (rand < p) return { type: CUBE_TYPES.MAGMA };
+
+    p += trapWeight;
+    if (rand < p) return { type: CUBE_TYPES.TRAP };
+
+    p += tntWeight;
+    if (rand < p) return { type: CUBE_TYPES.TNT };
+
+    p += crackedWeight;
+    if (rand < p) return { type: CUBE_TYPES.CRACKED };
+
+    p += riverWeight;
+    if (rand < p && !isRiverTarget && this.riverCooldown <= 0) {
+      const riverDir = Math.random() < 0.5 ? 'left' : 'right';
+      const exitCell = (riverDir === 'left') ? this.getLeftCell(r, c) : this.getRightCell(r, c);
+      if (this.isCellValid(exitCell.r, exitCell.c)) {
+        this.riverCooldown = 3;
+        return { type: CUBE_TYPES.RIVER, customData: { riverDir, streamLength: 1 } };
+      }
       return { type: CUBE_TYPES.SAFE };
     }
+
+    p += treeWeight;
+    if (rand < p && !isRiverTarget) return { type: CUBE_TYPES.TREE };
+
+    p += dirtWeight;
+    if (rand < p) return { type: CUBE_TYPES.DIRT };
+
+    return { type: CUBE_TYPES.SAFE };
   }
 
   ensureSolvability(r, cubesInRow) {

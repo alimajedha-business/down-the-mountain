@@ -30,17 +30,86 @@ export const GAME_CONFIG = {
   SPIKE_CYCLE_PERIOD: 3.0,
   SPIKE_ACTIVE_TIME: 1.0,
 
-  // Top-Down Mountain Collapse (Linear Constant Trend)
-  AVALANCHE_INITIAL_DELAY: 3.0, // starts collapse 3 seconds after game start
-  AVALANCHE_ROW_INTERVAL: 0.4,  // linear constant trend: 1 row every 0.4s
+  // Top-Down Mountain Collapse (Dynamic Difficulty Progression)
+  AVALANCHE_INITIAL_DELAY: 4.0, // Grace period before avalanche begins
+  AVALANCHE_ROW_INTERVAL: 0.65, // Base interval at score 0 (speeds up progressively)
 
   // Score & Currency
   STEP_SCORE: 1,
   STAR_SCORE: 5,
   STAR_COINS: 1,
 
+  // Combo Streak Settings
+  COMBO_WINDOW: 0.55,           // Seconds between hops to maintain combo streak
+  MIN_COMBO_FOR_DISPLAY: 4,     // Show combo banner starting at 4 consecutive quick hops
+
   BIOME_STEP_INTERVAL: 45,
 };
+
+export const DIFFICULTY_TIERS = [
+  {
+    id: 1,
+    minScore: 0,
+    maxScore: 20,
+    name: 'Peaceful Peaks',
+    tagline: 'GENTLE START',
+    allowedCubes: ['safe', 'dirt', 'tree'],
+    hasBear: false,
+    avalancheInterval: 0.65,
+    spikeCycleSafe: 2.4,
+    spikeCycleActive: 0.6,
+  },
+  {
+    id: 2,
+    minScore: 21,
+    maxScore: 40,
+    name: 'Rapid Rivers & TNT',
+    tagline: 'STAGE 2 UNLOCKED: WATERFALLS & TNT!',
+    allowedCubes: ['safe', 'dirt', 'tree', 'river', 'tnt'],
+    hasBear: false,
+    avalancheInterval: 0.50,
+    spikeCycleSafe: 2.2,
+    spikeCycleActive: 0.8,
+  },
+  {
+    id: 3,
+    minScore: 41,
+    maxScore: 70,
+    name: 'Wild Territory',
+    tagline: 'STAGE 3 UNLOCKED: BEAR & SPIKE TRAPS!',
+    allowedCubes: ['safe', 'dirt', 'tree', 'river', 'tnt', 'trap', 'cracked'],
+    hasBear: true,
+    bearCooldownMin: 16.0,
+    bearCooldownMax: 22.0,
+    avalancheInterval: 0.40,
+    spikeCycleSafe: 2.0,
+    spikeCycleActive: 1.0,
+  },
+  {
+    id: 4,
+    minScore: 71,
+    maxScore: Infinity,
+    name: 'Volcanic Inferno',
+    tagline: 'STAGE 4 UNLOCKED: BURNING MAGMA!',
+    allowedCubes: ['safe', 'dirt', 'tree', 'river', 'tnt', 'trap', 'cracked', 'magma'],
+    hasBear: true,
+    bearCooldownMin: 11.0,
+    bearCooldownMax: 16.0,
+    avalancheInterval: 0.32,
+    spikeCycleSafe: 1.8,
+    spikeCycleActive: 1.0,
+  }
+];
+
+export function getTierForScore(score) {
+  for (let i = DIFFICULTY_TIERS.length - 1; i >= 0; i--) {
+    if (score >= DIFFICULTY_TIERS[i].minScore) {
+      return DIFFICULTY_TIERS[i];
+    }
+  }
+  return DIFFICULTY_TIERS[0];
+}
+
 
 export const CUBE_TYPES = {
   SAFE: 'safe',
