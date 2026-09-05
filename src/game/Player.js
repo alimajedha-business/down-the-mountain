@@ -44,6 +44,9 @@ export class Player {
     this.comboCount = 0;
     this.comboTimer = 0;
 
+    // Input Buffering for fluid, instant-response controls
+    this.bufferedMove = null;
+
     // Callbacks
     this.onScoreUpdate = null;
     this.onStarCollect = null;
@@ -69,6 +72,7 @@ export class Player {
     this.isCurrentHopSticky = false;
     this.comboCount = 0;
     this.comboTimer = 0;
+    this.bufferedMove = null;
     this.targetRotY = 0;
     this.charMesh.setShieldActive(false);
     this.charMesh.root.visible = true;
@@ -81,14 +85,26 @@ export class Player {
   }
 
   jumpLeft() {
-    if (this.isMoving || this.isDead || this.isSliding) return;
+    if (this.isDead || this.isSliding) return;
+    if (this.isMoving) {
+      // Input buffering: queue left hop to execute immediately on landing
+      this.bufferedMove = 'left';
+      return;
+    }
+    this.bufferedMove = null;
     this.targetRotY = -Math.PI / 2; // Face Left
     const dest = this.grid.getLeftCell(this.gridPos.r, this.gridPos.c);
     this.attemptJump(dest.r, dest.c);
   }
 
   jumpRight() {
-    if (this.isMoving || this.isDead || this.isSliding) return;
+    if (this.isDead || this.isSliding) return;
+    if (this.isMoving) {
+      // Input buffering: queue right hop to execute immediately on landing
+      this.bufferedMove = 'right';
+      return;
+    }
+    this.bufferedMove = null;
     this.targetRotY = 0; // Face Right
     const dest = this.grid.getRightCell(this.gridPos.r, this.gridPos.c);
     this.attemptJump(dest.r, dest.c);
@@ -149,7 +165,9 @@ export class Player {
         this.onComboUpdate(this.comboCount);
       }
 
-      this.audio.playJump(1.0 + (targetR % 10) * 0.02);
+      // Musical pitch scaling with combo streak
+      const comboPitch = Math.min(1.42, 1.0 + Math.min(this.comboCount, 10) * 0.035);
+      this.audio.playJump(comboPitch);
     }
 
     if (this.onScoreUpdate) {
@@ -190,6 +208,7 @@ export class Player {
 
   onLanded() {
     this.isMoving = false;
+    this.charMesh.triggerLandingSquash();
     this.particles.spawnLandingDust(this.charMesh.root.position);
 
     const cube = this.grid.getCube(this.gridPos.r, this.gridPos.c);
@@ -265,6 +284,17 @@ export class Player {
           this.onMudUpdate(this.mudStickyJumps, GAME_CONFIG.DIRT_STICKY_JUMPS);
         }
         break;
+    }
+
+    // Execute buffered move immediately on landing if player is alive and not sliding
+    if (this.bufferedMove && !this.isDead && !this.isSliding) {
+      const nextMove = this.bufferedMove;
+      this.bufferedMove = null;
+      if (nextMove === 'left') {
+        this.jumpLeft();
+      } else if (nextMove === 'right') {
+        this.jumpRight();
+      }
     }
   }
 

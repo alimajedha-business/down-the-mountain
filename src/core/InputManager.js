@@ -21,6 +21,7 @@ export class InputManager {
     window.addEventListener('keydown', (e) => {
       // Don't intercept if typing in an input
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.repeat) return;
 
       if (e.code === 'ArrowLeft' || e.code === 'KeyA' || e.code === 'KeyQ') {
         e.preventDefault();

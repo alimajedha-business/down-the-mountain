@@ -16,6 +16,10 @@ export class CharacterMesh {
     this.shieldMesh = null;
     this.isLoaded = false;
 
+    // Dynamic Landing Squash & Stretch Physics
+    this.landingSquashTimer = 0;
+    this.landingSquashDuration = 0.12;
+
     // Build Shield Bubble
     this.buildShieldBubble();
 
@@ -102,6 +106,11 @@ export class CharacterMesh {
     }
   }
 
+  // Trigger punchy landing squash on touchdown
+  triggerLandingSquash() {
+    this.landingSquashTimer = this.landingSquashDuration;
+  }
+
   // --- Dynamic Jump & Idle Animations ---
   update(delta, isMoving = false, hopProgress = 0, isSticky = false) {
     // Shield Bubble Pulse
@@ -113,6 +122,7 @@ export class CharacterMesh {
 
     // Parabolic Hop Squash & Stretch Animation
     if (isMoving) {
+      this.landingSquashTimer = 0;
       if (isSticky) {
         // Sticky glue pull physics: elongated stretch as feet resist peeling off
         const stickyStretch = Math.sin(Math.pow(hopProgress, 0.7) * Math.PI) * 0.32;
@@ -131,6 +141,17 @@ export class CharacterMesh {
         );
         this.bodyGroup.rotation.x = Math.sin(hopProgress * Math.PI) * 0.15;
       }
+    } else if (this.landingSquashTimer > 0) {
+      // Punchy, elastic landing squash bounce
+      this.landingSquashTimer -= delta;
+      const progress = Math.max(0, this.landingSquashTimer / this.landingSquashDuration);
+      const squashAmount = Math.sin(progress * Math.PI) * 0.25;
+      this.bodyGroup.scale.set(
+        1.0 + squashAmount * 0.65,
+        1.0 - squashAmount,
+        1.0 + squashAmount * 0.65
+      );
+      this.bodyGroup.rotation.x = 0;
     } else {
       const time = performance.now() * 0.003;
       const idleSquash = 1.0 + Math.sin(time) * 0.025;

@@ -68,8 +68,8 @@ export class SceneManager {
     this.dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
     this.dirLight.position.set(30, 45, 10);
     this.dirLight.castShadow = true;
-    this.dirLight.shadow.mapSize.width = 2048;
-    this.dirLight.shadow.mapSize.height = 2048;
+    this.dirLight.shadow.mapSize.width = 1024;
+    this.dirLight.shadow.mapSize.height = 1024;
     this.dirLight.shadow.camera.near = 0.5;
     this.dirLight.shadow.camera.far = 100;
     const d = 14;
@@ -108,6 +108,9 @@ export class SceneManager {
 
     const texture = new THREE.CanvasTexture(bgCanvas);
     texture.colorSpace = THREE.SRGBColorSpace;
+    if (this.scene.background && this.scene.background.dispose) {
+      this.scene.background.dispose();
+    }
     this.scene.background = texture;
   }
 
@@ -182,12 +185,15 @@ export class SceneManager {
     }
   }
 
-  setCameraTarget(targetPos, immediate = false) {
+  setCameraTarget(targetPos, immediate = false, delta = null) {
     if (!targetPos) return;
     if (immediate) {
       this.cameraTarget.copy(targetPos);
     } else {
-      this.cameraTarget.lerp(targetPos, 0.15);
+      const dt = delta !== null ? delta : (this.lastDelta || 0.016);
+      // Exponential decay smoothing: framerate-independent, zero micro-judder
+      const factor = 1 - Math.exp(-14 * dt);
+      this.cameraTarget.lerp(targetPos, factor);
     }
     this.updateCameraPosition();
   }
@@ -239,6 +245,7 @@ export class SceneManager {
   }
 
   update(delta) {
+    this.lastDelta = delta;
     if (this.shakeTimer > 0) {
       this.shakeTimer -= delta;
       if (this.shakeTimer <= 0) {

@@ -422,16 +422,79 @@ export class VoxelMeshes {
         metalness: 0.6,
         roughness: 0.2,
         flatShading: true
+      }),
+
+      treeGreen: new THREE.MeshLambertMaterial({
+        color: 0x2e7d32,
+        flatShading: true
+      }),
+
+      sparkYellow: new THREE.MeshBasicMaterial({
+        color: 0xffff00
       })
     };
   }
 
   initGeometries() {
+    // 1. Star Geometry (pre-extruded and centered once)
+    const starShape = new THREE.Shape();
+    const points = 5;
+    for (let i = 0; i < points * 2; i++) {
+      const radius = i % 2 === 0 ? 0.32 : 0.16;
+      const angle = (i * Math.PI) / points - Math.PI / 2;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      if (i === 0) starShape.moveTo(x, y);
+      else starShape.lineTo(x, y);
+    }
+    starShape.closePath();
+    const starGeo = new THREE.ExtrudeGeometry(starShape, { depth: 0.1, bevelEnabled: false });
+    starGeo.center();
+
+    // 2. Shield Outer Frame Geometry
+    const outerShape = new THREE.Shape();
+    outerShape.moveTo(-0.24, 0.28);
+    outerShape.lineTo(0.24, 0.28);
+    outerShape.quadraticCurveTo(0.26, 0.0, 0.0, -0.32);
+    outerShape.quadraticCurveTo(-0.26, 0.0, -0.24, 0.28);
+    outerShape.closePath();
+    const outerGeo = new THREE.ExtrudeGeometry(outerShape, {
+      depth: 0.06,
+      bevelEnabled: true,
+      bevelSegments: 2,
+      steps: 1,
+      bevelSize: 0.015,
+      bevelThickness: 0.015
+    });
+    outerGeo.center();
+
+    // 3. Shield Inner Face Geometry
+    const innerShape = new THREE.Shape();
+    innerShape.moveTo(-0.19, 0.23);
+    innerShape.lineTo(0.19, 0.23);
+    innerShape.quadraticCurveTo(0.20, 0.0, 0.0, -0.26);
+    innerShape.quadraticCurveTo(-0.20, 0.0, -0.19, 0.23);
+    innerShape.closePath();
+    const innerGeo = new THREE.ExtrudeGeometry(innerShape, {
+      depth: 0.07,
+      bevelEnabled: false
+    });
+    innerGeo.center();
+
     return {
       box: new THREE.BoxGeometry(1, 1, 1),
       spikeCone: new THREE.ConeGeometry(0.24, 0.7, 4),
       shadowDisc: new THREE.PlaneGeometry(0.35, 0.35),
-      sphere: new THREE.SphereGeometry(0.35, 12, 12)
+      sphere: new THREE.SphereGeometry(0.35, 12, 12),
+      sparkSphere: new THREE.SphereGeometry(0.14, 8, 8),
+      treeTier1: new THREE.BoxGeometry(0.7, 0.35, 0.7),
+      treeTier2: new THREE.BoxGeometry(0.5, 0.32, 0.5),
+      treeTier3: new THREE.BoxGeometry(0.3, 0.3, 0.3),
+      shieldOuter: outerGeo,
+      shieldInner: innerGeo,
+      shieldCrossV: new THREE.BoxGeometry(0.05, 0.20, 0.02),
+      shieldCrossH: new THREE.BoxGeometry(0.15, 0.05, 0.02),
+      star: starGeo
     };
   }
 
@@ -517,18 +580,17 @@ export class VoxelMeshes {
     const tree = new THREE.Group();
     tree.position.y = 0.5;
 
-    const greenMat = new THREE.MeshLambertMaterial({ color: 0x2e7d32, flatShading: true });
-    const tier1 = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.35, 0.7), greenMat);
+    const tier1 = new THREE.Mesh(this.geometries.treeTier1, this.materials.treeGreen);
     tier1.position.y = 0.4;
     tier1.castShadow = true;
     tree.add(tier1);
 
-    const tier2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.32, 0.5), greenMat);
+    const tier2 = new THREE.Mesh(this.geometries.treeTier2, this.materials.treeGreen);
     tier2.position.y = 0.7;
     tier2.castShadow = true;
     tree.add(tier2);
 
-    const tier3 = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), greenMat);
+    const tier3 = new THREE.Mesh(this.geometries.treeTier3, this.materials.treeGreen);
     tier3.position.y = 0.98;
     tier3.castShadow = true;
     tree.add(tier3);
@@ -550,8 +612,8 @@ export class VoxelMeshes {
     group.add(mesh);
 
     const spark = new THREE.Mesh(
-      new THREE.SphereGeometry(0.14, 8, 8),
-      new THREE.MeshBasicMaterial({ color: 0xffff00 })
+      this.geometries.sparkSphere,
+      this.materials.sparkYellow
     );
     spark.position.set(0, 0.65, 0);
     spark.visible = false;
@@ -632,22 +694,7 @@ export class VoxelMeshes {
     shadow.position.y = 0.51;
     group.add(shadow);
 
-    const starShape = new THREE.Shape();
-    const points = 5;
-    for (let i = 0; i < points * 2; i++) {
-      const radius = i % 2 === 0 ? 0.32 : 0.16;
-      const angle = (i * Math.PI) / points - Math.PI / 2;
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      if (i === 0) starShape.moveTo(x, y);
-      else starShape.lineTo(x, y);
-    }
-    starShape.closePath();
-
-    const starGeo = new THREE.ExtrudeGeometry(starShape, { depth: 0.1, bevelEnabled: false });
-    starGeo.center();
-
-    const starMesh = new THREE.Mesh(starGeo, this.materials.goldStar);
+    const starMesh = new THREE.Mesh(this.geometries.star, this.materials.goldStar);
     starMesh.position.y = 1.05;
     starMesh.castShadow = true;
     group.add(starMesh);
@@ -685,58 +732,30 @@ export class VoxelMeshes {
     shieldGroup.position.y = 1.05;
 
     // 1. Outer Heraldic Shield Frame (Golden Metallic Rim)
-    const outerShape = new THREE.Shape();
-    outerShape.moveTo(-0.24, 0.28);
-    outerShape.lineTo(0.24, 0.28);
-    outerShape.quadraticCurveTo(0.26, 0.0, 0.0, -0.32);
-    outerShape.quadraticCurveTo(-0.26, 0.0, -0.24, 0.28);
-    outerShape.closePath();
-
-    const outerGeo = new THREE.ExtrudeGeometry(outerShape, {
-      depth: 0.06,
-      bevelEnabled: true,
-      bevelSegments: 2,
-      steps: 1,
-      bevelSize: 0.015,
-      bevelThickness: 0.015
-    });
-    outerGeo.center();
-    const outerMesh = new THREE.Mesh(outerGeo, this.materials.shieldRim);
+    const outerMesh = new THREE.Mesh(this.geometries.shieldOuter, this.materials.shieldRim);
     outerMesh.castShadow = true;
     shieldGroup.add(outerMesh);
 
     // 2. Inset Shield Face (Glowing Cyan Core Plate)
-    const innerShape = new THREE.Shape();
-    innerShape.moveTo(-0.19, 0.23);
-    innerShape.lineTo(0.19, 0.23);
-    innerShape.quadraticCurveTo(0.20, 0.0, 0.0, -0.26);
-    innerShape.quadraticCurveTo(-0.20, 0.0, -0.19, 0.23);
-    innerShape.closePath();
-
-    const innerGeo = new THREE.ExtrudeGeometry(innerShape, {
-      depth: 0.07,
-      bevelEnabled: false
-    });
-    innerGeo.center();
-    const innerMesh = new THREE.Mesh(innerGeo, this.materials.shieldFace);
+    const innerMesh = new THREE.Mesh(this.geometries.shieldInner, this.materials.shieldFace);
     shieldGroup.add(innerMesh);
 
     // 3. Central Heraldic Emblem (Glowing White / Platinum Cross)
     // Front Emblem
-    const crossVF = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.20, 0.02), this.materials.shieldEmblem);
+    const crossVF = new THREE.Mesh(this.geometries.shieldCrossV, this.materials.shieldEmblem);
     crossVF.position.set(0, 0.03, 0.04);
     shieldGroup.add(crossVF);
 
-    const crossHF = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.05, 0.02), this.materials.shieldEmblem);
+    const crossHF = new THREE.Mesh(this.geometries.shieldCrossH, this.materials.shieldEmblem);
     crossHF.position.set(0, 0.06, 0.04);
     shieldGroup.add(crossHF);
 
     // Back Emblem (for 360-degree visibility while spinning)
-    const crossVB = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.20, 0.02), this.materials.shieldEmblem);
+    const crossVB = new THREE.Mesh(this.geometries.shieldCrossV, this.materials.shieldEmblem);
     crossVB.position.set(0, 0.03, -0.04);
     shieldGroup.add(crossVB);
 
-    const crossHB = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.05, 0.02), this.materials.shieldEmblem);
+    const crossHB = new THREE.Mesh(this.geometries.shieldCrossH, this.materials.shieldEmblem);
     crossHB.position.set(0, 0.06, -0.04);
     shieldGroup.add(crossHB);
 

@@ -489,6 +489,7 @@ export class MountainGrid {
           rowCubes.forEach(cube => {
             if (cube.mesh) {
               this.cubeGroup.remove(cube.mesh);
+              cube.mesh = null;
             }
             // Clean up from tracking sets
             this.animatedStars.delete(cube);

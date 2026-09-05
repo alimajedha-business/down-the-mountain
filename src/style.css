@@ -121,10 +121,38 @@ body {
   flex: 1;
   height: 100%;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.12s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .touch-zone:active {
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+#touch-left:active::after {
+  content: '◀';
+  position: absolute;
+  bottom: 25%;
+  left: 20%;
+  font-size: 32px;
+  color: rgba(0, 229, 255, 0.45);
+  transform: scale(1.2);
+  transition: transform 0.1s ease;
+  pointer-events: none;
+}
+
+#touch-right:active::after {
+  content: '▶';
+  position: absolute;
+  bottom: 25%;
+  right: 20%;
+  font-size: 32px;
+  color: rgba(255, 204, 0, 0.45);
+  transform: scale(1.2);
+  transition: transform 0.1s ease;
+  pointer-events: none;
 }
 
 /* ==========================================================================

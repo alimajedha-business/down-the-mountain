@@ -89,12 +89,19 @@ export class Hazards {
       const offset = (cube.r * 0.4 + cube.c * 0.25) % totalPeriod;
       const cycleTime = (timeSec + offset) % totalPeriod;
       const isActive = cycleTime < activeTime;
+      const isWarning = !isActive && cycleTime >= (totalPeriod - 0.35);
 
       cube.spikesActive = isActive;
       const spikeMesh = cube.mesh.userData.spikeMesh;
       if (spikeMesh) {
-        const targetY = isActive ? 0.75 : 0.15;
-        spikeMesh.position.y += (targetY - spikeMesh.position.y) * 0.35;
+        if (isActive) {
+          spikeMesh.position.y += (0.75 - spikeMesh.position.y) * 0.40;
+        } else if (isWarning) {
+          // Subtle pre-emergence warning rattle (telegraphs imminent danger)
+          spikeMesh.position.y = 0.22 + Math.sin(timeSec * 50) * 0.04;
+        } else {
+          spikeMesh.position.y += (0.15 - spikeMesh.position.y) * 0.35;
+        }
       }
     }
   }
@@ -198,15 +205,17 @@ export class Hazards {
 
       cube.timer -= delta;
 
-      // Noticeable seismic vibration tremor while active
+      // Escalating seismic vibration tremor while active
+      const isImminent = cube.timer < 0.75;
       if (cube.mesh) {
-        const tremorMag = (cube.timer < 0.8) ? 0.09 : 0.05;
+        const tremorMag = isImminent ? 0.11 : 0.05;
         cube.mesh.position.x = cube.worldPos.x + (Math.random() - 0.5) * tremorMag;
         cube.mesh.position.z = cube.worldPos.z + (Math.random() - 0.5) * tremorMag;
       }
 
-      // Small crumbling dust particles during tremor
-      if (Math.random() < 0.12) {
+      // Crumbling dust particles accelerate as collapse nears
+      const dustProb = isImminent ? 0.32 : 0.10;
+      if (Math.random() < dustProb) {
         this.particles.spawnCrumblyDebris(cube.worldPos);
       }
 

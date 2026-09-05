@@ -339,7 +339,7 @@ export class Game {
         );
 
         this.avalanche.update(delta, this.player.gridPos.r);
-        this.sceneMgr.setCameraTarget(this.player.charMesh.root.position);
+        this.sceneMgr.setCameraTarget(this.player.charMesh.root.position, false, delta);
       }
 
       this.sceneMgr.render();
